@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mnemósine - Centro de Comando</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans p-6">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center border-b border-gray-700 pb-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-teal-400">Mnemósine</h1>
+                <p class="text-sm text-gray-400">Plataforma de Auditoría, Trazabilidad y Protección de Autoría Artística</p>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="simularTrafico()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition">Visita Legítima</button>
+                <button onclick="simularAtaque()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+                    ⚠️ Simular Ataque Scraper
+                </button>
+                <button onclick="simularSubidaObra()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded shadow transition">Registrar Obra</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Panel de Seguridad -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4 text-red-400 flex items-center gap-2">🛡️ Monitor de Seguridad (Logs)</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-700 text-gray-300 text-sm">
+                                <th class="p-3 rounded-tl-lg">Amenaza</th>
+                                <th class="p-3">IP / Bot</th>
+                                <th class="p-3">Acción Tomada</th>
+                                <th class="p-3 rounded-tr-lg">Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-logs" class="text-sm divide-y divide-gray-700">
+                            <!-- Inyectado vía JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel de Obras Protegidas -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🖼️ Bóveda de Obras Protegidas</h2>
+                <div id="lista-obras" class="grid grid-cols-1 gap-4">
+                    <!-- Inyectado vía JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const endpointLogs = 'http://localhost:3000/api/logs';
+        const endpointObras = 'http://localhost:3000/api/obras';
+
+        async function simularTrafico() {
+            await fetch(endpointLogs, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+                body: JSON.stringify({ endpoint: '/portafolio/arte' })
+            });
+            cargarDatos();
+        }
+
+        async function simularAtaque() {
+            await fetch(endpointLogs, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'bad-scraper-bot-IA' },
+                body: JSON.stringify({ endpoint: '/download/all' })
+            });
+            cargarDatos();
+        }
+
+        async function simularSubidaObra() {
+            const num = Math.floor(Math.random() * 100);
+            await fetch(endpointObras, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo: `Ilustración Conceptual ${num}`, autorId: 'artista_eva', extras: { tecnica: 'Digital' } })
+            });
+            cargarDatos();
+        }
+
+        async function cargarDatos() {
+            const [resLogs, resObras] = await Promise.all([fetch(endpointLogs), fetch(endpointObras)]);
+            const logs = await resLogs.json();
+            const obras = await resObras.json();
+
+            document.getElementById('tabla-logs').innerHTML = logs.map(log => `
+                <tr class="hover:bg-gray-750 transition">
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${log.nivelAmenaza === 'ALTO' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}">${log.nivelAmenaza}</span></td>
+                    <td class="p-3 truncate max-w-[150px]">${log.userAgent}</td>
+                    <td class="p-3 text-gray-400">${log.accionMitigadora || 'Permitido'}</td>
+                    <td class="p-3 text-gray-500">${new Date(log.createdAt).toLocaleTimeString()}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('lista-obras').innerHTML = obras.map(obra => `
+                <div class="bg-gray-700 p-4 rounded flex flex-col gap-2 border-l-4 border-purple-500">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-gray-100">${obra.titulo}</h3>
+                        <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">Protegido</span>
+                    </div>
+                    <p class="text-xs font-mono text-gray-400 break-all bg-gray-900 p-2 rounded border border-gray-600">
+                        Hash Esteganográfico: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        // Cargar al inicio y refrescar cada 3 segundos
+        cargarDatos();
+        setInterval(cargarDatos, 3000);
+    </script>
+</body>
+</html>
