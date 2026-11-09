@@ -22,6 +22,14 @@
             </div>
         </header>
 
+        <!-- NUEVO PANEL: Estadísticas con Aggregation Framework -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400 flex items-center gap-2">📊 Inteligencia de Amenazas (MongoDB Aggregation)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="panel-estadisticas">
+                <p class="text-gray-400">Cargando métricas en tiempo real...</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Panel de Seguridad -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -36,9 +44,7 @@
                                 <th class="p-3 rounded-tr-lg">Hora</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-logs" class="text-sm divide-y divide-gray-700">
-                            <!-- Inyectado vía JS -->
-                        </tbody>
+                        <tbody id="tabla-logs" class="text-sm divide-y divide-gray-700"></tbody>
                     </table>
                 </div>
             </div>
@@ -46,9 +52,7 @@
             <!-- Panel de Obras Protegidas -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🖼️ Bóveda de Obras Protegidas</h2>
-                <div id="lista-obras" class="grid grid-cols-1 gap-4">
-                    <!-- Inyectado vía JS -->
-                </div>
+                <div id="lista-obras" class="grid grid-cols-1 gap-4"></div>
             </div>
         </div>
     </div>
@@ -56,6 +60,7 @@
     <script>
         const endpointLogs = 'http://localhost:3000/api/logs';
         const endpointObras = 'http://localhost:3000/api/obras';
+        const endpointEstadisticas = 'http://localhost:3000/api/estadisticas';
 
         async function simularTrafico() {
             await fetch(endpointLogs, {
@@ -66,8 +71,15 @@
         }
 
         async function simularAtaque() {
+            // Simulamos IPs diferentes para ver cómo el Aggregation Framework las agrupa
+            const fakeIp = `192.168.1.${Math.floor(Math.random() * 255)}`;
             await fetch(endpointLogs, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'bad-scraper-bot-IA' },
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Simulated-Agent': 'bad-scraper-bot-IA', // Cabecera que el navegador no bloquea
+                    'X-Forwarded-For': fakeIp
+                },
                 body: JSON.stringify({ endpoint: '/download/all' })
             });
             cargarDatos();
@@ -83,19 +95,45 @@
         }
 
         async function cargarDatos() {
-            const [resLogs, resObras] = await Promise.all([fetch(endpointLogs), fetch(endpointObras)]);
+            const [resLogs, resObras, resStats] = await Promise.all([
+                fetch(endpointLogs), fetch(endpointObras), fetch(endpointEstadisticas)
+            ]);
+            
             const logs = await resLogs.json();
             const obras = await resObras.json();
+            const stats = await resStats.json();
 
+            // Renderizar Estadísticas
+            const datosStats = stats.datos;
+            const ataquesTotales = datosStats.ataquesBloqueados.length > 0 ? datosStats.ataquesBloqueados[0].total : 0;
+            const topIp = datosStats.topIpsMaliciosas.length > 0 ? datosStats.topIpsMaliciosas[0]._id : 'Ninguna';
+
+            document.getElementById('panel-estadisticas').innerHTML = `
+                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-red-500">
+                    <span class="text-sm text-gray-400">Total Ataques Bloqueados</span>
+                    <span class="text-4xl font-bold text-red-400 mt-2">${ataquesTotales}</span>
+                </div>
+                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-orange-500">
+                    <span class="text-sm text-gray-400">IP Más Agresiva (Scraper)</span>
+                    <span class="text-xl font-mono text-orange-400 mt-2 truncate w-full text-center">${topIp}</span>
+                </div>
+                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-blue-500">
+                    <span class="text-sm text-gray-400">Rendimiento NoSQL</span>
+                    <span class="text-md text-blue-300 mt-2 text-center">Pipeline ejecutado en tiempo real</span>
+                </div>
+            `;
+
+            // Renderizar Logs
             document.getElementById('tabla-logs').innerHTML = logs.map(log => `
                 <tr class="hover:bg-gray-750 transition">
                     <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${log.nivelAmenaza === 'ALTO' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}">${log.nivelAmenaza}</span></td>
-                    <td class="p-3 truncate max-w-[150px]">${log.userAgent}</td>
+                    <td class="p-3 truncate max-w-[150px]">${log.ip || log.userAgent}</td>
                     <td class="p-3 text-gray-400">${log.accionMitigadora || 'Permitido'}</td>
                     <td class="p-3 text-gray-500">${new Date(log.createdAt).toLocaleTimeString()}</td>
                 </tr>
             `).join('');
 
+            // Renderizar Obras
             document.getElementById('lista-obras').innerHTML = obras.map(obra => `
                 <div class="bg-gray-700 p-4 rounded flex flex-col gap-2 border-l-4 border-purple-500">
                     <div class="flex justify-between items-start">
@@ -103,13 +141,12 @@
                         <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">Protegido</span>
                     </div>
                     <p class="text-xs font-mono text-gray-400 break-all bg-gray-900 p-2 rounded border border-gray-600">
-                        Hash Esteganográfico: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
+                        Hash: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
                     </p>
                 </div>
             `).join('');
         }
 
-        // Cargar al inicio y refrescar cada 3 segundos
         cargarDatos();
         setInterval(cargarDatos, 3000);
     </script>
