@@ -23,26 +23,31 @@ const registrarTraficoWeb = async (req, res) => {
   }
 };
 
-// Camino B: Recibe metadatos e imágenes para registrar obras[cite: 4, 8]
+// Camino B: Recibe obras reales y las encola para esteganografía
 const subirObra = async (req, res) => {
   try {
-    const metadatosObra = req.body; // Aquí vendrían el título, autorId, etc.
-    
-    // En un caso real aquí usarías Multer para recibir el archivo binario[cite: 7]
-    // Por ahora simularemos la ruta del archivo.
-    const trabajoArchivos = {
-      metadatos: metadatosObra,
-      rutaArchivoTemp: '/tmp/uploads/imagen_simulada.jpg', 
-      timestamp: new Date()
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se adjuntó ninguna imagen.' });
+    }
+
+    const jobData = {
+      rutaArchivoTemp: req.file.path,
+      nombreArchivo: req.file.filename,
+      metadatos: {
+        titulo: req.body.titulo || req.file.originalname,
+        autorId: req.body.autorId || 'artista_eva',
+        extras: {
+          mimetype: req.file.mimetype,
+          tamanoBytes: req.file.size
+        }
+      }
     };
 
-    // Encolamos el procesamiento de la imagen para la esteganografía[cite: 7, 8]
-    await archivosQueue.add('procesar-imagen', trabajoArchivos);
-
-    res.status(202).json({ mensaje: 'Obra recibida y encolada para inyección de marca de agua.' });
+    await archivosQueue.add('inyectar-marca-agua', jobData);
+    res.status(202).json({ mensaje: 'Imagen recibida y encolada para protección esteganográfica.' });
   } catch (error) {
     console.error('Error al encolar obra:', error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    res.status(500).json({ error: 'Error al procesar la subida de la obra.' });
   }
 };
 

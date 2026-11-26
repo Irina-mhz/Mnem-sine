@@ -8,21 +8,22 @@
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans p-6">
     <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center border-b border-gray-700 pb-4 mb-8">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-teal-400">Mnemósine</h1>
-                <p class="text-sm text-gray-400">Plataforma de Auditoría, Trazabilidad y Protección de Autoría Artística</p>
+                <p class="text-sm text-gray-400">Plataforma de Auditoría, Trazabilidad y Protección Esteganográfica LSB</p>
             </div>
-            <div class="flex gap-4">
-                <button onclick="simularTrafico()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition">Visita Legítima</button>
-                <button onclick="simularAtaque()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+            <div class="flex flex-wrap gap-3">
+                <button onclick="simularTrafico()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition text-sm font-medium">
+                    Visita Legítima
+                </button>
+                <button onclick="simularAtaque()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
                     ⚠️ Simular Ataque Scraper
                 </button>
-                <button onclick="simularSubidaObra()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded shadow transition">Registrar Obra</button>
             </div>
         </header>
 
-        <!-- NUEVO PANEL: Estadísticas con Aggregation Framework -->
+        <!-- Panel 1: Estadísticas con Aggregation Framework -->
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 border border-gray-700">
             <h2 class="text-xl font-semibold mb-4 text-blue-400 flex items-center gap-2">📊 Inteligencia de Amenazas (MongoDB Aggregation)</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="panel-estadisticas">
@@ -30,8 +31,43 @@
             </div>
         </div>
 
+        <!-- Panel 2: Protección Esteganográfica y Verificador Forense -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Formulario de Subida Real -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🔐 Proteger Nueva Obra (Inyección LSB)</h2>
+                <form id="form-subir-obra" onsubmit="subirObraReal(event)" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Título de la Obra</label>
+                        <input type="text" id="titulo-obra" required placeholder="Ej. Retrato Cyberpunk 01" 
+                            class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Seleccionar Imagen (.jpg, .png)</label>
+                        <input type="file" id="archivo-obra" accept="image/*" required 
+                            class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500">
+                    </div>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded shadow transition">
+                        Inyectar Marca de Agua y Registrar
+                    </button>
+                </form>
+            </div>
+
+            <!-- Verificador Forense de Esteganografía -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-teal-400 flex items-center gap-2">🔍 Auditoría Forense (Extractor LSB)</h2>
+                <p class="text-xs text-gray-400 mb-4">Sube una imagen protegida para leer el bit menos significativo (LSB) del canal rojo y verificar su autoría oculta.</p>
+                <input type="file" accept="image/png" onchange="verificarEsteganografia(event)" 
+                    class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 mb-4 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-500">
+                <div id="resultado-forense" class="bg-gray-900 p-3 rounded border border-gray-700 text-xs font-mono text-gray-400 min-h-[60px] flex items-center">
+                    Esperando imagen para escaneo de píxeles...
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Monitor de Logs y Bóveda -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Panel de Seguridad -->
+            <!-- Monitor de Seguridad -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-semibold mb-4 text-red-400 flex items-center gap-2">🛡️ Monitor de Seguridad (Logs)</h2>
                 <div class="overflow-x-auto">
@@ -49,7 +85,7 @@
                 </div>
             </div>
 
-            <!-- Panel de Obras Protegidas -->
+            <!-- Bóveda de Obras Protegidas -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🖼️ Bóveda de Obras Protegidas</h2>
                 <div id="lista-obras" class="grid grid-cols-1 gap-4"></div>
@@ -58,26 +94,26 @@
     </div>
 
     <script>
-        const endpointLogs = 'http://localhost:3000/api/logs';
-        const endpointObras = 'http://localhost:3000/api/obras';
-        const endpointEstadisticas = 'http://localhost:3000/api/estadisticas';
+        const endpointLogs = '/api/logs';
+        const endpointObras = '/api/obras';
+        const endpointEstadisticas = '/api/estadisticas';
 
         async function simularTrafico() {
             await fetch(endpointLogs, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ endpoint: '/portafolio/arte' })
             });
             cargarDatos();
         }
 
         async function simularAtaque() {
-            // Simulamos IPs diferentes para ver cómo el Aggregation Framework las agrupa
             const fakeIp = `192.168.1.${Math.floor(Math.random() * 255)}`;
             await fetch(endpointLogs, {
-                method: 'POST', 
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-Simulated-Agent': 'bad-scraper-bot-IA', // Cabecera que el navegador no bloquea
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Simulated-Agent': 'bad-scraper-bot-IA',
                     'X-Forwarded-For': fakeIp
                 },
                 body: JSON.stringify({ endpoint: '/download/all' })
@@ -85,20 +121,74 @@
             cargarDatos();
         }
 
-        async function simularSubidaObra() {
-            const num = Math.floor(Math.random() * 100);
+        async function subirObraReal(event) {
+            event.preventDefault();
+            const titulo = document.getElementById('titulo-obra').value;
+            const fileInput = document.getElementById('archivo-obra');
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append('titulo', titulo);
+            formData.append('autorId', 'artista_eva');
+            formData.append('imagen', fileInput.files[0]);
+
             await fetch(endpointObras, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ titulo: `Ilustración Conceptual ${num}`, autorId: 'artista_eva', extras: { tecnica: 'Digital' } })
+                method: 'POST',
+                body: formData
             });
-            cargarDatos();
+
+            document.getElementById('form-subir-obra').reset();
+            setTimeout(cargarDatos, 800); // Esperar a que el Worker termine Jimp
+        }
+
+        // Extractor forense LSB directo en el navegador usando Canvas
+        function verificarEsteganografia(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const resultadoDiv = document.getElementById('resultado-forense');
+            resultadoDiv.innerHTML = '<span class="text-yellow-400">Escaneando bits menos significativos...</span>';
+
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let bits = '';
+                let textoExtraido = '';
+
+                // Leer los primeros 2000 píxeles (suficiente para la firma)
+                const limite = Math.min(imageData.length / 4, 2000);
+                for (let i = 0; i < limite; i++) {
+                    const redChannel = imageData[i * 4]; // Canal R
+                    bits += (redChannel & 1).toString();
+
+                    if (bits.length === 8) {
+                        const charCode = parseInt(bits, 2);
+                        textoExtraido += String.fromCharCode(charCode);
+                        bits = '';
+
+                        if (textoExtraido.endsWith('|END')) {
+                            const firmaLimpia = textoExtraido.replace('|END', '');
+                            resultadoDiv.innerHTML = `<span class="text-teal-400 font-bold">✅ FIRMA DETECTADA: ${firmaLimpia}</span>`;
+                            return;
+                        }
+                    }
+                }
+                resultadoDiv.innerHTML = `<span class="text-red-400">❌ No se encontró firma válida de Mnemósine en los píxeles.</span>`;
+            };
+            img.src = URL.createObjectURL(file);
         }
 
         async function cargarDatos() {
             const [resLogs, resObras, resStats] = await Promise.all([
                 fetch(endpointLogs), fetch(endpointObras), fetch(endpointEstadisticas)
             ]);
-            
+
             const logs = await resLogs.json();
             const obras = await resObras.json();
             const stats = await resStats.json();
@@ -133,18 +223,26 @@
                 </tr>
             `).join('');
 
-            // Renderizar Obras
-            document.getElementById('lista-obras').innerHTML = obras.map(obra => `
-                <div class="bg-gray-700 p-4 rounded flex flex-col gap-2 border-l-4 border-purple-500">
-                    <div class="flex justify-between items-start">
-                        <h3 class="font-bold text-gray-100">${obra.titulo}</h3>
-                        <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">Protegido</span>
+            // Renderizar Obras con vista previa real y descarga
+            document.getElementById('lista-obras').innerHTML = obras.map(obra => {
+                const tieneImagenReal = obra.rutaArchivo && obra.rutaArchivo.startsWith('/protegidas/');
+                return `
+                <div class="bg-gray-700 p-4 rounded flex flex-col sm:flex-row gap-4 border-l-4 border-purple-500 items-center">
+                    ${tieneImagenReal ? `<img src="${obra.rutaArchivo}" alt="${obra.titulo}" class="w-20 h-20 object-cover rounded border border-gray-500 shrink-0">` : ''}
+                    <div class="flex flex-col gap-2 w-full overflow-hidden">
+                        <div class="flex justify-between items-center gap-2">
+                            <h3 class="font-bold text-gray-100 truncate">${obra.titulo}</h3>
+                            ${tieneImagenReal 
+                                ? `<a href="${obra.rutaArchivo}" download class="text-xs bg-teal-700 hover:bg-teal-600 text-white px-2 py-1 rounded shrink-0">Descargar PNG</a>`
+                                : `<span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded shrink-0">Simulado</span>`
+                            }
+                        </div>
+                        <p class="text-xs font-mono text-gray-400 break-all bg-gray-900 p-2 rounded border border-gray-600">
+                            Hash LSB: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
+                        </p>
                     </div>
-                    <p class="text-xs font-mono text-gray-400 break-all bg-gray-900 p-2 rounded border border-gray-600">
-                        Hash: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
-                    </p>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         cargarDatos();

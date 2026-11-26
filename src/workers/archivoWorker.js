@@ -1,38 +1,63 @@
 const { Worker } = require('bullmq');
+const Jimp = require('jimp');
+const path = require('path');
 const Obra = require('../models/Obra');
 const { redisConnection } = require('../config/queues');
 
-// Consumimos la cola de procesamiento de imágenes[cite: 8]
 const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
   const data = job.data;
-  console.log(`[Worker Esteganografía] Procesando nueva obra de autor: ${data.metadatos.autorId}`);
+  console.log(`[Worker Esteganografía] Procesando imagen real: ${data.nombreArchivo}`);
 
-  // 2. TRANSFORMAR: Simulamos el algoritmo de marca de agua esteganográfica[cite: 7, 8]
-  // En un entorno real, aquí usarías librerías como 'jimp' o un script en Python/C++
-  const hashGenerado = `mnemosine-trace-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  
-  // 3. CARGAR: Insertamos la obra en MongoDB con su firma invisible[cite: 7, 8]
   try {
+    // 1. Generar firma única rastreable
+    const hashGenerado = `MNEMOSINE:${Date.now()}:${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const mensajeOculto = `${hashGenerado}|END`; // Delimitador de fin de mensaje
+
+    // Convertir firma a cadena binaria (8 bits por carácter)
+    let binario = '';
+    for (let i = 0; i < mensajeOculto.length; i++) {
+      binario += mensajeOculto[i].charCodeAt(0).toString(2).padStart(8, '0');
+    }
+
+    // 2. Leer la imagen con Jimp e inyectar en el bit menos significativo (LSB)
+    const imagen = await Jimp.read(data.rutaArchivoTemp);
+    const width = imagen.bitmap.width;
+    let bitIndex = 0;
+
+    for (let i = 0; i < binario.length; i++) {
+      const x = i % width;
+      const y = Math.floor(i / width);
+      const pixelIndex = imagen.getPixelIndex(x, y);
+
+      // Modificar el bit menos significativo del canal Rojo (imperceptible al ojo humano)
+      const bit = parseInt(binario[bitIndex], 10);
+      imagen.bitmap.data[pixelIndex] = (imagen.bitmap.data[pixelIndex] & 0xFE) | bit;
+      bitIndex++;
+    }
+
+    // Guardar como PNG (formato sin pérdida para no destruir los bits ocultos)
+    const nombreProtegido = `protected-${Date.now()}.png`;
+    const rutaSalida = path.join(__dirname, '../../public/protegidas', nombreProtegido);
+    await imagen.writeAsync(rutaSalida);
+
+    // 3. Guardar registro en MongoDB con la ruta pública para el Dashboard
     const nuevaObra = new Obra({
-      titulo: data.metadatos.titulo || 'Obra sin título',
+      titulo: data.metadatos.titulo,
       autorId: data.metadatos.autorId,
-      rutaArchivo: data.rutaArchivoTemp,
+      rutaArchivo: `/protegidas/${nombreProtegido}`,
       marcaAgua: {
         inyectada: true,
         hashRastreable: hashGenerado,
         fechaInyeccion: new Date()
       },
-      metadatosEvolutivos: data.metadatos.extras || {}
+      metadatosEvolutivos: data.metadatos.extras
     });
 
     await nuevaObra.save();
-    console.log(`[Worker Esteganografía] Obra protegida y guardada exitosamente. Hash: ${hashGenerado}`);
-    
-    // Aquí se dispararía el evento en tiempo real al artista confirmando la protección[cite: 8]
+    console.log(`[Worker Esteganografía] Inyección LSB completada. Guardada en: /protegidas/${nombreProtegido}`);
   } catch (error) {
-    console.error(`[Worker Esteganografía] Error al guardar la obra en BD:`, error);
+    console.error(`[Worker Esteganografía] Error procesando imagen:`, error);
   }
-
 }, { connection: redisConnection });
 
 archivoWorker.on('failed', (job, err) => {
