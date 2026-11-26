@@ -1,8 +1,6 @@
 const IORedis = require('ioredis');
 const { peticionesWebQueue } = require('../config/queues');
 
-const { redisConnection: redisClient, peticionesWebQueue } = require('../config/queues');
-
 // Lista de firmas reales de crawlers de IA y herramientas CLI de scraping
 const FIRMAS_SCRAPERS_REALES = [
   'gptbot', 'ccbot', 'chatgpt-user', 'google-extended', 'anthropic-ai',
