@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const { activarHoneypot } = require('./escudoMiddleware');
+
 // Endpoints POST
 router.post('/logs', registrarTraficoWeb);
 // upload.single('imagen') intercepta el archivo enviado desde el formulario
@@ -26,6 +28,7 @@ router.post('/obras', upload.single('imagen'), subirObra);
 router.get('/logs', obtenerLogs);
 router.get('/obras', obtenerObras);
 router.get('/estadisticas', obtenerEstadisticas);
+router.get('/honeypot/dataset-hd', activarHoneypot);
 
 // Middleware para atrapar tráfico anómalo
 router.use((req, res, next) => {

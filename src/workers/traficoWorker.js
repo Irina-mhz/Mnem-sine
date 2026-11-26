@@ -13,12 +13,15 @@ const traficoWorker = new Worker('peticiones-web', async (job) => {
   let dictamenAnomalia = false;
   let accionMitigadora = 'Ninguna';
 
-  // Evaluación básica para clasificar el evento[cite: 7]
   const userAgent = (data.userAgent || '').toLowerCase();
-  if (userAgent.includes('bot') || userAgent.includes('scraper') || userAgent === '') {
+  const firmasMaliciosas = ['bot', 'scraper', 'python', 'curl', 'wget', 'scrapy', 'honeypot', 'headless'];
+  const esSospechoso = firmasMaliciosas.some(f => userAgent.includes(f)) || userAgent === '';
+  const esFlood = data.body && data.body.peticionesEnVentana > 12;
+
+  if (esSospechoso || esFlood) {
     nivelAmenaza = 'ALTO';
     dictamenAnomalia = true;
-    accionMitigadora = 'Bloqueo de IP y disparo de alerta al autor';
+    accionMitigadora = 'Bloqueo activo en Redis (HTTP 403/429)';
   }
 
   // 3. CARGAR (Load): Insertamos el documento definitivo en MongoDB[cite: 7]

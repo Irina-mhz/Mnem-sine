@@ -1,31 +1,28 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
+const apiRoutes = require('./api/routes');
+const { escudoMiddleware } = require('./api/escudoMiddleware');
 
 const app = express();
 app.use(express.json());
 
-const path = require('path');
-// Servir archivos estáticos desde la carpeta "public"
+// 1. Escudo real en el borde (intercepta antes de servir archivos o rutas)
+app.use(escudoMiddleware);
+
+// 2. Servir archivos estáticos
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Conexión a MongoDB (Capa de Almacenamiento)
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Conectado a MongoDB - Mnemósine DB'))
-  .catch(err => console.error('Error al conectar a MongoDB:', err));
-
-// Ruta de prueba para la API REST (Capa de Entrada)
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'API de Mnemósine activa y en escucha' });
-});
-// Importar y usar las rutas de la API
-const apiRoutes = require('./api/routes');
+// 3. Rutas de la API
 app.use('/api', apiRoutes);
 
-// Levantar procesos asíncronos en segundo plano (Workers)[cite: 4]
-require('./workers/traficoWorker');
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('Conectado a MongoDB - Mnemósine DB'))
+  .catch((err) => console.error('Error al conectar a MongoDB:', err));
 
-// Levantar procesos asíncronos en segundo plano (Workers)[cite: 4]
+// Workers en segundo plano
 require('./workers/traficoWorker');
 require('./workers/archivoWorker');
 
