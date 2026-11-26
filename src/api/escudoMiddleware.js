@@ -1,3 +1,4 @@
+const { redisConnection: redisClient, peticionesWebQueue } = require('../config/queues');
 const IORedis = require('ioredis');
 const { peticionesWebQueue } = require('../config/queues');
 
