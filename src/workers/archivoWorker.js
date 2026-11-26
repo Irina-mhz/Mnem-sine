@@ -2,12 +2,22 @@ const { Worker } = require('bullmq');
 const Jimp = require('jimp');
 const path = require('path');
 const fs = require('fs').promises;
+const cloudinary = require('cloudinary').v2;
 const Obra = require('../models/Obra');
 const { redisConnection } = require('../config/queues');
 
+// Configurar Cloudinary si existen credenciales en .env
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
 const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
   const data = job.data;
-  console.log(`[Worker Esteganografía] Procesando imagen real: ${data.nombreArchivo}`);
+  console.log(`[Worker Esteganografía] Procesando imagen: ${data.nombreArchivo}`);
 
   try {
     // 1. Generar firma única rastreable
@@ -19,7 +29,7 @@ const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
       binario += mensajeOculto[i].charCodeAt(0).toString(2).padStart(8, '0');
     }
 
-    // 2. Leer la imagen e inyectar bits en el canal Rojo (LSB)
+    // 2. Inyectar bits LSB con Jimp
     const imagen = await Jimp.read(data.rutaArchivoTemp);
     const width = imagen.bitmap.width;
     let bitIndex = 0;
@@ -34,24 +44,33 @@ const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
       bitIndex++;
     }
 
-    // Guardar imagen protegida sin pérdida (PNG)
     const nombreProtegido = `protected-${Date.now()}.png`;
-    const rutaSalida = path.join(__dirname, '../../public/protegidas', nombreProtegido);
-    await imagen.writeAsync(rutaSalida);
+    const rutaSalidaLocal = path.join(__dirname, '../../public/protegidas', nombreProtegido);
+    await imagen.writeAsync(rutaSalidaLocal);
 
-    // 3. Eliminar el archivo temporal crudo para no saturar el servidor
-    try {
-      await fs.unlink(data.rutaArchivoTemp);
-      console.log(`[Worker Esteganografía] Temporal eliminado: ${data.nombreArchivo}`);
-    } catch (unlinkErr) {
-      console.warn(`[Worker Esteganografía] No se pudo borrar el temporal:`, unlinkErr.message);
+    // Borrar imagen cruda temporal
+    await fs.unlink(data.rutaArchivoTemp).catch(() => {});
+
+    let urlFinal = `/protegidas/${nombreProtegido}`;
+
+    // 3. Subir PNG sin pérdida a Cloudinary si está configurado
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      const resultadoCloud = await cloudinary.uploader.upload(rutaSalidaLocal, {
+        folder: 'mnemosine_protegidas',
+        resource_type: 'image',
+        format: 'png' // Crítico: mantener PNG sin recompresión para preservar los bits LSB
+      });
+      urlFinal = resultadoCloud.secure_url;
+      // Limpiar también el PNG local ya subido a la nube
+      await fs.unlink(rutaSalidaLocal).catch(() => {});
+      console.log(`[Worker Esteganografía] Subida a Cloudinary exitosa: ${urlFinal}`);
     }
 
     // 4. Registrar en MongoDB
     const nuevaObra = new Obra({
       titulo: data.metadatos.titulo,
       autorId: data.metadatos.autorId,
-      rutaArchivo: `/protegidas/${nombreProtegido}`,
+      rutaArchivo: urlFinal,
       marcaAgua: {
         inyectada: true,
         hashRastreable: hashGenerado,
@@ -61,7 +80,7 @@ const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
     });
 
     await nuevaObra.save();
-    console.log(`[Worker Esteganografía] Inyección LSB completada: /protegidas/${nombreProtegido}`);
+    console.log(`[Worker Esteganografía] Obra guardada en BD -> ${urlFinal}`);
   } catch (error) {
     console.error(`[Worker Esteganografía] Error procesando imagen:`, error);
   }

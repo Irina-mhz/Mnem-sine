@@ -2,10 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
+fs.mkdirSync(path.join(__dirname, '../public/uploads'), { recursive: true });
+fs.mkdirSync(path.join(__dirname, '../public/protegidas'), { recursive: true });
 const apiRoutes = require('./api/routes');
 const { escudoMiddleware } = require('./api/escudoMiddleware');
 
 const app = express();
+app.set('trust proxy', 1); // Confía en el primer proxy (Render / Cloudflare / Nginx)
 app.use(express.json());
 
 // 1. Escudo real en el borde (intercepta antes de servir archivos o rutas)

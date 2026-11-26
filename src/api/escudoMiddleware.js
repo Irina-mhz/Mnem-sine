@@ -1,10 +1,7 @@
 const IORedis = require('ioredis');
 const { peticionesWebQueue } = require('../config/queues');
 
-const redisClient = new IORedis({
-  host: process.env.REDIS_HOST || '127.0.0.1',
-  port: process.env.REDIS_PORT || 6379
-});
+const { redisConnection: redisClient, peticionesWebQueue } = require('../config/queues');
 
 // Lista de firmas reales de crawlers de IA y herramientas CLI de scraping
 const FIRMAS_SCRAPERS_REALES = [

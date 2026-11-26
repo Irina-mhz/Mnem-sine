@@ -1,21 +1,15 @@
 const { Queue } = require('bullmq');
-const Redis = require('ioredis');
+const IORedis = require('ioredis');
 
-// Conexión a Redis local utilizando las variables de tu .env[cite: 4]
-const redisConnection = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  maxRetriesPerRequest: null // Parámetro estricto y obligatorio para BullMQ
-});
+const redisConnection = process.env.REDIS_URL
+  ? new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
+  : new IORedis({
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: process.env.REDIS_PORT || 6379,
+      maxRetriesPerRequest: null
+    });
 
-// Cola para el Camino A: Análisis de tráfico y detección de bots[cite: 7, 8]
-const peticionesWebQueue = new Queue('peticiones-web', { 
-  connection: redisConnection 
-});
+const peticionesWebQueue = new Queue('peticiones-web', { connection: redisConnection });
+const archivosQueue = new Queue('procesamiento-archivos', { connection: redisConnection });
 
-// Cola para el Camino B: Procesamiento de imágenes y esteganografía[cite: 7, 8]
-const archivosQueue = new Queue('procesamiento-archivos', { 
-  connection: redisConnection 
-});
-
-module.exports = { peticionesWebQueue, archivosQueue, redisConnection };
+module.exports = { redisConnection, peticionesWebQueue, archivosQueue };
