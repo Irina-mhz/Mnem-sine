@@ -1,16 +1,27 @@
-const verificarAdmin = (req, res, next) => {
-  const tokenRecibido = req.headers['x-admin-token'];
-  const claveMaestra = process.env.ADMIN_PASSWORD;
+const jwt = require('jsonwebtoken');
 
-  if (!claveMaestra) {
-    return res.status(500).json({ error: 'ADMIN_PASSWORD no configurada en el servidor.' });
+const verificarToken = (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '').trim();
+
+  if (!token) {
+    return res.status(401).json({ error: 'Acceso denegado. Token no proporcionado.' });
   }
 
-  if (tokenRecibido !== claveMaestra) {
-    return res.status(401).json({ error: 'No autorizado. Se requiere acceso de administrador.' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.usuario = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Sesión inválida o expirada.' });
   }
+};
 
+const soloAdmin = (req, res, next) => {
+  if (!req.usuario || req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'Permisos insuficientes. Solo administradora.' });
+  }
   next();
 };
 
-module.exports = { verificarAdmin };
+module.exports = { verificarToken, soloAdmin };
