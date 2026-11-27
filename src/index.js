@@ -22,7 +22,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/api', apiRoutes);
 
 // Conexión a MongoDB
-mongoose.connect(process.env.MONGO_URI)
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+mongoose.connect(mongoUri)
   .then(() => console.log('Conectado a MongoDB - Mnemósine DB'))
   .catch((err) => console.error('Error al conectar a MongoDB:', err));
 
