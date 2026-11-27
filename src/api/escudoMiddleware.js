@@ -1,3 +1,13 @@
+// Garantía de acceso: exentar al administrador autenticado y la vista del panel
+const authHeader = req.headers.authorization || '';
+const tokenRecibido = authHeader.replace('Bearer ', '').trim();
+
+if (
+    req.path === '/admin.html' ||
+    (process.env.ADMIN_PASSWORD && tokenRecibido === process.env.ADMIN_PASSWORD)
+) {
+  return next();
+}
 const { redisConnection: redisClient, peticionesWebQueue } = require('../config/queues');
 
 // Lista de firmas reales de crawlers de IA y herramientas CLI de scraping
