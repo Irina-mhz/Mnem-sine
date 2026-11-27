@@ -38,6 +38,23 @@
     <a href="/api/honeypot/dataset-hd" style="display:none;" aria-hidden="true">Descargar Dataset Completo Sin Marca</a>
 
     <script>
+        async function descargarObra(url, titulo) {
+            try {
+                const respuesta = await fetch(url);
+                const blob = await respuesta.blob();
+                const urlLocal = window.URL.createObjectURL(blob);
+                const enlace = document.createElement('a');
+                enlace.href = urlLocal;
+                enlace.download = `${titulo.replace(/\s+/g, '_')}_mnemosine.png`;
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                window.URL.revokeObjectURL(urlLocal);
+            } catch (error) {
+                console.error('Error al descargar la obra:', error);
+                window.open(url, '_blank');
+            }
+        }
         async function cargarGaleria() {
             try {
                 const res = await fetch('/api/obras');
@@ -48,6 +65,10 @@
                     contenedor.innerHTML = '<p class="text-gray-400 text-sm">Aún no hay obras publicadas en la bóveda.</p>';
                     return;
                 }
+
+                <button type="button" class="btn-descargar" onclick="descargarObra('${obra.rutaArchivo}', '${obra.titulo}')">
+                Descargar PNG Protegido
+                </button>
 
                 contenedor.innerHTML = obras.map(obra => {
                     const tieneImagen = obra.rutaArchivo && (obra.rutaArchivo.startsWith('/protegidas/') || obra.rutaArchivo.startsWith('http'));
