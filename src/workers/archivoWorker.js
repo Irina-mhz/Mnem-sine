@@ -46,6 +46,7 @@ const archivoWorker = new Worker('procesamiento-archivos', async (job) => {
 
     const nombreProtegido = `protected-${Date.now()}.png`;
     const rutaSalidaLocal = path.join(__dirname, '../../public/protegidas', nombreProtegido);
+    await fs.mkdir(path.dirname(rutaSalidaLocal), { recursive: true });
     await imagen.writeAsync(rutaSalidaLocal);
 
     // Borrar imagen cruda temporal
