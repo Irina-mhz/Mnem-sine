@@ -108,6 +108,12 @@
                 referrer: document.referrer || 'directo'
             })
             }).catch(() => {});
+
+        const tokenActivo = localStorage.getItem('mnemosine_token');
+            const cabeceras = { 'Content-Type': 'application/json' };
+            if (tokenActivo) {
+            cabeceras['Authorization'] = `Bearer ${tokenActivo}`;
+        }
     </script>
 </body>
 </html>

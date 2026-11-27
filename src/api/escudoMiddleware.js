@@ -28,10 +28,10 @@ const registrarBloqueoWaf = async (req, ip, motivo, accionMitigadora, detallesVa
 
 const escudoMiddleware = async (req, res, next) => {
   try {
-    // 1. Permitir acceso a las vistas HTML de autenticación y paneles
-    const vistasProtegidas = ['/acceso.html', '/admin.html', '/artista.html'];
-    if (vistasProtegidas.includes(req.path)) {
-      return next();
+    // 1. Permitir acceso a las vistas HTML (la protección de datos ocurre en /api/*)
+    const vistasHtml = ['/', '/index.html', '/acceso.html', '/admin.html', '/artista.html'];
+    if (vistasHtml.includes(req.path)) {
+        return next();
     }
 
     // 2. Exentar del WAF a usuarios con token JWT válido (admin o artista)
