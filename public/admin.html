@@ -213,6 +213,25 @@
             img.src = URL.createObjectURL(file);
         }
 
+        async function descargarObra(url, titulo) {
+            try {
+                const respuesta = await fetch(url);
+                const blob = await respuesta.blob();
+                const urlLocal = window.URL.createObjectURL(blob);
+                const enlace = document.createElement('a');
+                enlace.href = urlLocal;
+                enlace.download = `${titulo.replace(/\s+/g, '_')}_protegida.png`;
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                window.URL.revokeObjectURL(urlLocal);
+            } catch (error) {
+                console.error('Error al descargar la obra:', error);
+                window.open(url, '_blank');
+            }
+        }
+
+
         async function cargarDatos() {
             if (!adminToken) return;
             const headersAuth = { 'x-admin-token': adminToken };
@@ -270,7 +289,9 @@
                         <div class="flex justify-between items-center gap-2">
                             <h3 class="font-bold text-gray-100 truncate">${obra.titulo}</h3>
                             ${tieneImagenReal 
-                                ? `<a href="${obra.rutaArchivo}" download class="text-xs bg-teal-700 hover:bg-teal-600 text-white px-2 py-1 rounded shrink-0">Descargar PNG</a>`
+                                ? `<button type="button" onclick="descargarObra('${obra.rutaArchivo}', '${obra.titulo}')">
+                                    Descargar PNG Protegido
+                                    </button>`
                                 : `<span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded shrink-0">Simulado</span>`
                             }
                         </div>
