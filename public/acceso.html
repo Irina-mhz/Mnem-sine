@@ -236,5 +236,85 @@
 
       <button type="submit" class="btn-submit" id="btn-registro">Solicitar Verificación</button>
     </form>
+    <div id="mensaje-estado" style="margin-top: 1rem; text-align: center; font-weight: bold;"></div>
 
-    <div
+<script>
+  const tiempoInicio = Date.now();
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegistro = document.getElementById('tab-registro');
+  const formLogin = document.getElementById('form-login');
+  const formRegistro = document.getElementById('form-registro');
+  const mensajeEstado = document.getElementById('mensaje-estado');
+
+  function mostrarMensaje(texto, esError = false) {
+    mensajeEstado.textContent = texto;
+    mensajeEstado.style.color = esError ? '#ff5555' : '#50fa7b';
+  }
+
+  tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('activo');
+    tabRegistro.classList.remove('activo');
+    formLogin.classList.add('activo');
+    formRegistro.classList.remove('activo');
+    mensajeEstado.textContent = '';
+  });
+
+  tabRegistro.addEventListener('click', () => {
+    tabRegistro.classList.add('activo');
+    tabLogin.classList.remove('activo');
+    formRegistro.classList.add('activo');
+    formLogin.classList.remove('activo');
+    mensajeEstado.textContent = '';
+  });
+
+  formLogin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email')?.value || document.querySelector('#form-login input[type="email"]').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return mostrarMensaje(data.error || 'Error al iniciar sesión.', true);
+
+      localStorage.setItem('mnemosine_token', data.token);
+      if (data.usuario) localStorage.setItem('mnemosine_usuario', JSON.stringify(data.usuario));
+      window.location.href = data.usuario?.rol === 'admin' ? '/admin.html' : '/artista.html';
+    } catch (err) {
+      mostrarMensaje('Error de conexión con el servidor.', true);
+    }
+  });
+
+  formRegistro.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      nombre: document.getElementById('reg-nombre').value.trim(),
+      email: document.getElementById('reg-email').value.trim(),
+      portafolio: document.getElementById('reg-portafolio').value.trim(),
+      password: document.getElementById('reg-password').value,
+      sitio_secundario: document.getElementById('sitio_secundario').value,
+      tiempoCarga: tiempoInicio
+    };
+
+    try {
+      const res = await fetch('/api/auth/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) return mostrarMensaje(data.error || 'No se pudo procesar el registro.', true);
+
+      mostrarMensaje(data.mensaje || 'Solicitud enviada. Espera la aprobación de la administradora.');
+      formRegistro.reset();
+    } catch (err) {
+      mostrarMensaje('Error de conexión con el servidor.', true);
+    }
+  });
+</script>
+  </body>
+</html>
