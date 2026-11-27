@@ -5,35 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mnemósine — Galería Protegida</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            color: #222838;
+            background-color: #e8eef5;
+            background-image:
+                linear-gradient(165deg, rgba(246, 244, 250, 0.52) 0%, rgba(232, 241, 245, 0.48) 50%, rgba(244, 240, 248, 0.56) 100%),
+                url('waterlilies.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .font-editorial {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+        }
+
+        .glass-card {
+            background: rgba(252, 250, 255, 0.84);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(92, 118, 153, 0.26);
+            box-shadow: 0 14px 36px rgba(42, 54, 82, 0.10);
+        }
+
+        .glass-nav {
+            background: rgba(250, 248, 254, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(92, 118, 153, 0.24);
+        }
+
+        .btn-botanical {
+            background: linear-gradient(135deg, #3d6354, #5c7699);
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 6px 18px rgba(61, 99, 84, 0.22);
+        }
+
+        .btn-botanical:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(61, 99, 84, 0.28);
+        }
+
+        .pill-lsb {
+            background: rgba(61, 99, 84, 0.14);
+            color: #2f5244;
+            border: 1px solid rgba(61, 99, 84, 0.3);
+        }
+    </style>
 </head>
-<body class="bg-gray-950 text-gray-200 font-sans min-h-screen flex flex-col">
-    <nav class="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center gap-4">
+<body>
+    <nav class="glass-nav sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center gap-4 flex-wrap">
             <div>
-                <h1 class="text-2xl font-bold text-teal-400 tracking-wide">MNEMÓSINE</h1>
-                <p class="text-xs text-gray-400">Portafolio Visual Protegido contra Scraping de IA</p>
+                <h1 class="font-editorial text-3xl font-semibold text-[#253b34] tracking-wide leading-none">Mnemósine</h1>
+                <p class="text-xs text-[#5b647a] mt-1">Portafolio Visual Protegido contra Scraping de IA</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="badge-sesion" class="hidden text-xs text-teal-300 bg-teal-950/80 border border-teal-800 px-2.5 py-1 rounded-full"></span>
-                <a id="btn-nav-sesion" href="/acceso.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-3 py-2 rounded transition">
-                    Iniciar Sesión / Invitado →
+            <div id="nav-sesion" class="flex items-center gap-2.5 flex-wrap">
+                <a href="acceso.html" class="text-xs font-medium glass-card hover:bg-white/95 text-[#2c3548] px-4 py-2 rounded-full transition">
+                    Acceso Creadores / WAF →
                 </a>
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 py-10 flex-grow w-full">
-        <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-100">Obras Verificadas en Bóveda</h2>
-            <p class="text-sm text-gray-400 mt-1">Todas las piezas cuentan con firma esteganográfica LSB incrustada a nivel de píxel.</p>
+        <div class="mb-8 glass-card rounded-2xl p-6">
+            <h2 class="font-editorial text-2xl sm:text-3xl font-semibold text-[#222838]">Obras Verificadas en Bóveda</h2>
+            <p class="text-sm text-[#5b647a] mt-1">Todas las piezas cuentan con firma esteganográfica LSB incrustada a nivel de píxel.</p>
         </div>
 
         <div id="galeria-publica" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <p class="text-gray-500 text-sm">Cargando catálogo...</p>
+            <p class="text-[#5b647a] text-sm glass-card p-5 rounded-2xl">Cargando catálogo...</p>
         </div>
     </main>
 
-    <footer class="border-t border-gray-800 py-6 text-center text-xs text-gray-500">
+    <footer class="glass-nav py-6 text-center text-xs text-[#5b647a]">
         Protegido por Mnemósine Active WAF &amp; LSB Steganography
     </footer>
 
@@ -41,29 +99,28 @@
     <a href="/api/honeypot/dataset-hd" style="display:none;" aria-hidden="true">Descargar Dataset Completo Sin Marca</a>
 
     <script>
-        const tokenActivo = localStorage.getItem('mnemosine_token');
-        const rolActivo = localStorage.getItem('mnemosine_rol');
-        const autorActivo = localStorage.getItem('mnemosine_autor');
+        const token = localStorage.getItem('mnemosine_token');
+        const rol = localStorage.getItem('mnemosine_rol');
+        const autor = localStorage.getItem('mnemosine_autor');
+        const navSesion = document.getElementById('nav-sesion');
 
-        const cabeceras = { 'Content-Type': 'application/json' };
-        if (tokenActivo) {
-            cabeceras['Authorization'] = `Bearer ${tokenActivo}`;
-        }
-
-        // Adaptar barra superior sin cerrar la sesión del usuario
-        const btnNav = document.getElementById('btn-nav-sesion');
-        const badgeSesion = document.getElementById('badge-sesion');
-
-        if (tokenActivo && rolActivo === 'admin') {
-            badgeSesion.textContent = 'Sesión: Admin';
-            badgeSesion.classList.remove('hidden');
-            btnNav.textContent = '← Volver a Centro de Comando';
-            btnNav.href = '/admin.html';
-        } else if (tokenActivo && rolActivo === 'artista') {
-            badgeSesion.textContent = `Sesión: ${autorActivo || 'Artista'}`;
-            badgeSesion.classList.remove('hidden');
-            btnNav.textContent = '← Volver a mi Estudio';
-            btnNav.href = '/artista.html';
+        if (token && rol) {
+            const rutaPanel = rol === 'admin' ? 'admin.html' : 'artista.html';
+            const textoPanel = rol === 'admin' ? 'Centro de Comando WAF' : `Mi Estudio (${autor || 'Artista'})`;
+            navSesion.innerHTML = `
+                <a href="${rutaPanel}" class="text-xs btn-botanical px-4 py-2 rounded-full transition">
+                    ${textoPanel} →
+                </a>
+                <button type="button" id="btn-salir-galeria" class="text-xs font-medium glass-card hover:bg-white/95 text-[#8f3b46] px-3.5 py-2 rounded-full transition cursor-pointer">
+                    Cerrar Sesión
+                </button>
+            `;
+            document.getElementById('btn-salir-galeria').addEventListener('click', () => {
+                localStorage.removeItem('mnemosine_token');
+                localStorage.removeItem('mnemosine_rol');
+                localStorage.removeItem('mnemosine_autor');
+                window.location.reload();
+            });
         }
 
         async function descargarObra(url, titulo) {
@@ -84,38 +141,64 @@
             }
         }
 
+        function renderizarDemoSinBackend(contenedor) {
+            contenedor.innerHTML = `
+                <article class="glass-card rounded-2xl overflow-hidden flex flex-col transition hover:-translate-y-0.5">
+                    <div class="h-64 bg-[#e4e9f2]/70 overflow-hidden">
+                        <img src="waterlilies.jpg" alt="Nenúfares en el Estanque" class="w-full h-full object-cover hover:scale-105 transition duration-500">
+                    </div>
+                    <div class="p-5 flex flex-col gap-3 flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <h3 class="font-editorial font-semibold text-[#222838] text-xl leading-snug">Nenúfares en el Estanque</h3>
+                                <span class="text-[11px] pill-lsb px-2.5 py-0.5 rounded-full font-medium shrink-0">LSB Firmado</span>
+                            </div>
+                            <p class="text-xs text-[#5b647a] mt-1">Autor: Vista_Previa</p>
+                        </div>
+                        <div class="pt-3 border-t border-[#5c7699]/15 flex justify-between items-center gap-2">
+                            <span class="text-[11px] font-mono text-[#68728a] truncate">lsb:demo-preview-01</span>
+                            <button type="button" onclick="descargarObra('waterlilies.jpg', 'Nenufares_Estanque')" class="text-xs btn-botanical px-3.5 py-1.5 rounded-full shrink-0 cursor-pointer">Descargar PNG</button>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
         async function cargarGaleria() {
+            const contenedor = document.getElementById('galeria-publica');
             try {
-                const res = await fetch('/api/obras', { headers: cabeceras });
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch('/api/obras', { headers });
+                if (!res.ok) throw new Error('Sin respuesta del API');
                 const obras = await res.json();
-                const contenedor = document.getElementById('galeria-publica');
 
                 if (!Array.isArray(obras) || !obras.length) {
-                    contenedor.innerHTML = '<p class="text-gray-400 text-sm">Aún no hay obras publicadas en la bóveda.</p>';
+                    contenedor.innerHTML = '<p class="text-[#5b647a] text-sm glass-card p-5 rounded-2xl">Aún no hay obras publicadas en la bóveda.</p>';
                     return;
                 }
 
                 contenedor.innerHTML = obras.map(obra => {
-                    const tieneImagen = obra.rutaArchivo && (obra.rutaArchivo.startsWith('/protegidas/') || obra.rutaArchivo.startsWith('http'));
+                    const urlImagen = obra.rutaArchivo || obra.urlCloudinary || obra.rutaProtegida || '';
+                    const tieneImagen = Boolean(urlImagen) && (urlImagen.startsWith('/protegidas/') || urlImagen.startsWith('http'));
                     const tituloSeguro = obra.titulo.replace(/'/g, "\\'");
                     return `
-                    <article class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col">
-                        ${tieneImagen 
-                            ? `<div class="h-64 bg-gray-950 overflow-hidden"><img src="${obra.rutaArchivo}" alt="${obra.titulo}" class="w-full h-full object-cover hover:scale-105 transition duration-300"></div>`
-                            : `<div class="h-64 bg-gray-800/50 flex items-center justify-center text-gray-500 text-xs">Procesando firma LSB...</div>`
+                    <article class="glass-card rounded-2xl overflow-hidden flex flex-col transition hover:-translate-y-0.5">
+                        ${tieneImagen
+                            ? `<div class="h-64 bg-[#e4e9f2]/70 overflow-hidden"><img src="${urlImagen}" alt="${obra.titulo}" class="w-full h-full object-cover hover:scale-105 transition duration-500"></div>`
+                            : `<div class="h-64 bg-[#e4e9f2]/50 flex items-center justify-center text-[#5b647a] text-xs italic">Procesando firma LSB...</div>`
                         }
                         <div class="p-5 flex flex-col gap-3 flex-grow justify-between">
                             <div>
                                 <div class="flex justify-between items-start gap-2">
-                                    <h3 class="font-bold text-gray-100 text-lg">${obra.titulo}</h3>
-                                    <span class="text-[11px] bg-teal-950 text-teal-300 border border-teal-800 px-2 py-0.5 rounded-full shrink-0">LSB Firmado</span>
+                                    <h3 class="font-editorial font-semibold text-[#222838] text-xl leading-snug">${obra.titulo}</h3>
+                                    <span class="text-[11px] pill-lsb px-2.5 py-0.5 rounded-full font-medium shrink-0">LSB Firmado</span>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">Autor: ${obra.autorId}</p>
+                                <p class="text-xs text-[#5b647a] mt-1">Autor: ${obra.autorId}</p>
                             </div>
-                            <div class="pt-3 border-t border-gray-800 flex justify-between items-center gap-2">
-                                <span class="text-[11px] font-mono text-gray-500 truncate">${obra.marcaAgua?.hashRastreable || ''}</span>
-                                ${tieneImagen 
-                                    ? `<button type="button" onclick="descargarObra('${obra.rutaArchivo}', '${tituloSeguro}')" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded font-medium shrink-0 transition cursor-pointer">Descargar PNG</button>`
+                            <div class="pt-3 border-t border-[#5c7699]/15 flex justify-between items-center gap-2">
+                                <span class="text-[11px] font-mono text-[#68728a] truncate">${obra.marcaAgua?.hashRastreable || ''}</span>
+                                ${tieneImagen
+                                    ? `<button type="button" onclick="descargarObra('${urlImagen}', '${tituloSeguro}')" class="text-xs btn-botanical px-3.5 py-1.5 rounded-full shrink-0 cursor-pointer">Descargar PNG</button>`
                                     : ''
                                 }
                             </div>
@@ -123,16 +206,17 @@
                     </article>`;
                 }).join('');
             } catch (e) {
-                console.error('Error cargando galería:', e);
+                renderizarDemoSinBackend(contenedor);
             }
         }
-
         cargarGaleria();
 
-        // Reportar visita de navegación real al motor de auditoría
+        const logHeaders = { 'Content-Type': 'application/json' };
+        if (token) logHeaders['Authorization'] = `Bearer ${token}`;
+
         fetch('/api/logs', {
             method: 'POST',
-            headers: cabeceras,
+            headers: logHeaders,
             body: JSON.stringify({
                 pagina: window.location.pathname,
                 referrer: document.referrer || 'directo'

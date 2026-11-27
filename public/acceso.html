@@ -4,26 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mnemósine | Acceso y Registro de Creadores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
-
-    :root {
-      --bg: #0b0d12;
-      --card: #131722;
-      --border: #23293a;
-      --accent: #7c5cff;
-      --accent-hover: #6946ff;
-      --text: #e6e9f0;
-      --muted: #8b94a8;
-      --danger: #ff4d6d;
-      --success: #2ec4b6;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #161b29 0%, var(--bg) 70%);
-      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: #222838;
+      background-color: #e8eef5;
+      background-image:
+        linear-gradient(165deg, rgba(246, 244, 250, 0.52) 0%, rgba(232, 241, 245, 0.48) 50%, rgba(244, 240, 248, 0.56) 100%),
+        url('waterlilies.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -33,139 +29,119 @@
     .contenedor {
       width: 100%;
       max-width: 440px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 2rem;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+      background: rgba(252, 250, 255, 0.84);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(92, 118, 153, 0.28);
+      border-radius: 22px;
+      padding: 2.2rem 2rem;
+      box-shadow: 0 18px 40px rgba(34, 45, 70, 0.14);
     }
 
-    .marca {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
+    .marca { text-align: center; margin-bottom: 1.5rem; }
     .marca h1 {
       margin: 0;
-      font-size: 1.5rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2.3rem;
+      font-weight: 600;
+      color: #253b34;
     }
-
-    .marca p {
-      margin: 0.35rem 0 0;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
+    .marca p { margin: 0.35rem 0 0; font-size: 0.85rem; color: #5b647a; }
 
     .tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      background: #0d1018;
-      border-radius: 8px;
+      background: rgba(232, 236, 246, 0.85);
+      border-radius: 999px;
       padding: 4px;
       margin-bottom: 1.5rem;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(92, 118, 153, 0.22);
     }
 
     .tab-btn {
       background: transparent;
       border: none;
-      color: var(--muted);
+      color: #5b647a;
       padding: 0.6rem;
       font-weight: 600;
-      font-size: 0.9rem;
-      border-radius: 6px;
+      font-size: 0.88rem;
+      border-radius: 999px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .tab-btn.activo {
-      background: var(--accent);
-      color: #fff;
+      background: #ffffff;
+      color: #3d6354;
+      box-shadow: 0 4px 12px rgba(42, 54, 82, 0.08);
     }
 
     .formulario { display: none; }
     .formulario.activo { display: block; }
 
-    .campo {
-      margin-bottom: 1rem;
-    }
-
-    .campo label {
-      display: block;
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 0.35rem;
-    }
-
+    .campo { margin-bottom: 1rem; }
+    .campo label { display: block; font-size: 0.82rem; font-weight: 500; margin-bottom: 0.35rem; color: #222838; }
     .campo input {
       width: 100%;
-      padding: 0.7rem 0.85rem;
-      background: #0d1018;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.92rem;
-      outline: none;
+      padding: 0.72rem 0.9rem;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(92, 118, 153, 0.28);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      color: #222838;
     }
+    .campo input:focus { outline: none; border-color: #7b6d9c; }
+    .campo small { display: block; margin-top: 0.3rem; font-size: 0.75rem; color: #5b647a; }
 
-    .campo input:focus {
-      border-color: var(--accent);
-    }
-
-    .campo small {
-      display: block;
-      margin-top: 0.3rem;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    /* Trampa Honeypot: invisible para humanos, detectable por scrapers que leen el DOM */
     .campo-verificacion-extra {
-      position: absolute;
-      left: -9999px;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      opacity: 0;
+      position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0;
     }
 
     .btn-submit {
       width: 100%;
-      padding: 0.8rem;
+      padding: 0.82rem;
       margin-top: 0.5rem;
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #3d6354, #5c7699);
       color: #fff;
+      border: none;
+      border-radius: 999px;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: background 0.2s;
+      box-shadow: 0 6px 18px rgba(61, 99, 84, 0.22);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .btn-submit:hover { background: var(--accent-hover); }
-    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(61, 99, 84, 0.28);
+    }
+
+    .zona-invitado {
+      margin-top: 1.35rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid rgba(92, 118, 153, 0.22);
+      text-align: center;
+    }
 
     .btn-invitado {
       display: block;
       width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #3b4259;
-      border-radius: 8px;
-      color: #a5b4fc;
+      padding: 0.72rem 1rem;
+      border: 1px solid rgba(92, 118, 153, 0.32);
+      border-radius: 999px;
+      color: #2f5244;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       font-weight: 600;
-      background: rgba(124, 92, 255, 0.12);
-      transition: all 0.2s;
+      background: rgba(61, 99, 84, 0.10);
+      transition: all 0.2s ease;
     }
 
     .btn-invitado:hover {
-      background: rgba(124, 92, 255, 0.22);
-      color: #fff;
-      border-color: var(--accent);
+      background: rgba(61, 99, 84, 0.18);
+      border-color: #3d6354;
+      color: #222838;
     }
   </style>
 </head>
@@ -181,7 +157,6 @@
       <button type="button" class="tab-btn" id="tab-registro">Soy Artista</button>
     </div>
 
-    <!-- FORMULARIO DE INICIO DE SESIÓN -->
     <form id="form-login" class="formulario activo">
       <div class="campo">
         <label for="login-email">Correo electrónico</label>
@@ -194,11 +169,10 @@
       <button type="submit" class="btn-submit" id="btn-login">Entrar al Panel</button>
     </form>
 
-    <!-- FORMULARIO DE REGISTRO ANTI-BOT -->
     <form id="form-registro" class="formulario">
       <div class="campo">
         <label for="reg-nombre">Nombre artístico o firma</label>
-        <input type="text" id="reg-nombre" placeholder="Ej. NocturnaArt" required />
+        <input type="text" id="reg-nombre" placeholder="Ej. Atelier del Estanque" required />
       </div>
       <div class="campo">
         <label for="reg-email">Correo electrónico</label>
@@ -213,22 +187,17 @@
         <label for="reg-password">Contraseña (mínimo 8 caracteres)</label>
         <input type="password" id="reg-password" minlength="8" placeholder="••••••••" required />
       </div>
-
-      <!-- Campo Honeypot invisible para humanos -->
       <div class="campo-verificacion-extra" aria-hidden="true">
         <label for="sitio_secundario">Sitio web secundario (dejar vacío)</label>
         <input type="text" id="sitio_secundario" name="sitio_secundario" tabindex="-1" autocomplete="off" />
       </div>
-
       <button type="submit" class="btn-submit" id="btn-registro">Solicitar Verificación</button>
     </form>
 
-    <div id="mensaje-estado" style="margin-top: 1rem; text-align: center; font-size: 0.88rem; font-weight: 600;"></div>
+    <div id="mensaje-estado" style="margin-top: 1rem; text-align: center; font-weight: 600; font-size: 0.85rem;"></div>
 
-    <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: center;">
-      <a href="/index.html" class="btn-invitado">
-        Entrar como Invitado (Galería Pública) →
-      </a>
+    <div class="zona-invitado">
+      <a href="/index.html" class="btn-invitado">Entrar como Invitado (Galería Pública) →</a>
     </div>
   </div>
 
@@ -242,7 +211,7 @@
 
     function mostrarMensaje(texto, esError = false) {
       mensajeEstado.textContent = texto;
-      mensajeEstado.style.color = esError ? '#ff8fa3' : '#72efdd';
+      mensajeEstado.style.color = esError ? '#b85d68' : '#2e4e41';
     }
 
     tabLogin.addEventListener('click', () => {
@@ -307,6 +276,16 @@
         });
         const data = await res.json();
         if (!res.ok) return mostrarMensaje(data.error || 'Error al enviar solicitud.', true);
+
+        if (data.token) {
+          const rol = data.rol || data.usuario?.rol;
+          const autor = data.nombreArtistico || data.usuario?.nombreArtistico || '';
+          localStorage.setItem('mnemosine_token', data.token);
+          localStorage.setItem('mnemosine_rol', rol);
+          localStorage.setItem('mnemosine_autor', autor);
+          window.location.href = rol === 'admin' ? '/admin.html' : '/artista.html';
+          return;
+        }
 
         formRegistro.reset();
         mostrarMensaje(data.mensaje || 'Solicitud enviada. Espera la aprobación de la administradora.', false);
