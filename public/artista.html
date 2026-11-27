@@ -339,40 +339,50 @@
     }
 
     async function cargarMisObras() {
-      const contenedor = document.getElementById('contenedor-obras');
-      try {
-        const res = await fetch('/api/obras');
-        const obras = await res.json();
+        const contenedor = document.getElementById('contenedor-obras');
+        try {
+            const res = await fetch('/api/obras', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+            });
+            const data = await res.json();
 
-        // Filtrar las obras que pertenecen al artista autenticado
-        const misObras = obras.filter(o => o.autorId === autor);
+            if (!res.ok || !Array.isArray(data)) {
+            throw new Error(data.error || 'No se pudo obtener el listado de obras');
+            }
 
-        if (misObras.length === 0) {
-          contenedor.innerHTML = '<p style="color: var(--muted); font-size: 0.88rem;">Aún no has subido obras con esta cuenta.</p>';
-          return;
+            const rolActual = localStorage.getItem('mnemosine_rol');
+            const misObras = rolActual === 'admin'
+            ? data
+            : data.filter(o => o.autorId === autor);
+
+            if (misObras.length === 0) {
+            contenedor.innerHTML = '<p style="color: var(--muted); font-size: 0.88rem;">Aún no has subido obras con esta cuenta.</p>';
+            return;
+            }
+
+            contenedor.innerHTML = '';
+            misObras.forEach(obra => {
+            const urlImagen = obra.urlCloudinary || obra.rutaProtegida || obra.rutaArchivo || '';
+            const card = document.createElement('div');
+            card.className = 'obra-card';
+            card.innerHTML = `
+                <img src="${urlImagen}" alt="${obra.titulo}" loading="lazy" />
+                <div class="obra-info">
+                <h3 title="${obra.titulo}">${obra.titulo}</h3>
+                <span class="obra-meta">Firma LSB: ${obra.autorId}</span>
+                <button type="button" class="btn-descargar">Descargar PNG Protegido</button>
+                </div>
+            `;
+            card.querySelector('.btn-descargar').addEventListener('click', () => {
+                descargarBlob(urlImagen, obra.titulo);
+            });
+            contenedor.appendChild(card);
+            });
+        } catch (err) {
+            contenedor.innerHTML = '<p style="color: #ff8fa3; font-size: 0.88rem;">Error al cargar tus obras.</p>';
         }
-
-        contenedor.innerHTML = '';
-        misObras.forEach(obra => {
-          const urlImagen = obra.urlCloudinary || obra.rutaProtegida || '';
-          const card = document.createElement('div');
-          card.className = 'obra-card';
-          card.innerHTML = `
-            <img src="${urlImagen}" alt="${obra.titulo}" loading="lazy" />
-            <div class="obra-info">
-              <h3 title="${obra.titulo}">${obra.titulo}</h3>
-              <span class="obra-meta">Firma LSB: ${obra.autorId}</span>
-              <button type="button" class="btn-descargar">Descargar PNG Protegido</button>
-            </div>
-          `;
-          card.querySelector('.btn-descargar').addEventListener('click', () => {
-            descargarBlob(urlImagen, obra.titulo);
-          });
-          contenedor.appendChild(card);
-        });
-      } catch (err) {
-        contenedor.innerHTML = '<p style="color: #ff8fa3; font-size: 0.88rem;">Error al cargar tus obras.</p>';
-      }
     }
 
     // Subida de obra autenticada con JWT
