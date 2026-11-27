@@ -1,97 +1,106 @@
-// Garantía de acceso: exentar al administrador autenticado y la vista del panel
-const authHeader = req.headers.authorization || '';
-const tokenRecibido = authHeader.replace('Bearer ', '').trim();
+const jwt = require('jsonwebtoken');
+const { redisConnection: redisClient } = require('../config/queues');
 
-if (
-    req.path === '/admin.html' ||
-    (process.env.ADMIN_PASSWORD && tokenRecibido === process.env.ADMIN_PASSWORD)
-) {
-  return next();
-}
-const { redisConnection: redisClient, peticionesWebQueue } = require('../config/queues');
-
-// Lista de firmas reales de crawlers de IA y herramientas CLI de scraping
-const FIRMAS_SCRAPERS_REALES = [
-  'gptbot', 'ccbot', 'chatgpt-user', 'google-extended', 'anthropic-ai',
-  'claudebot', 'bytespider', 'python-urllib', 'python-requests', 'scrapy',
-  'curl', 'wget', 'headlesschrome', 'puppeteer', 'playwright', 'bad-scraper'
-];
+const obtenerIpCliente = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || '0.0.0.0';
+};
 
 const escudoMiddleware = async (req, res, next) => {
-  // Ignoramos consultas internas del propio Dashboard para no autobloquearnos al refrescar
-  if (req.originalUrl === '/api/logs' || req.originalUrl === '/api/estadisticas' || req.originalUrl === '/api/obras') {
-    if (req.method === 'GET') return next();
-  }
-
-  const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-  const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-  const claveBloqueo = `bloqueo:ip:${ip}`;
-  const claveRateLimit = `ratelimit:ip:${ip}`;
-
   try {
-    // 1. VERIFICAR SI LA IP YA ESTÁ BLOQUEADA EN REDIS
-    const estaBloqueada = await redisClient.get(claveBloqueo);
-    if (estaBloqueada) {
+    // 1. Permitir acceso a las vistas HTML de autenticación y paneles
+    const vistasProtegidas = ['/acceso.html', '/admin.html', '/artista.html'];
+    if (vistasProtegidas.includes(req.path)) {
+      return next();
+    }
+
+    // 2. Exentar del WAF a usuarios con token JWT válido (admin o artista)
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded && (decoded.rol === 'admin' || decoded.rol === 'artista')) {
+          req.usuario = decoded;
+          return next();
+        }
+      } catch (err) {
+        // Si el token expiró o es falso, continúa hacia el análisis normal del WAF
+      }
+    }
+
+    const ip = obtenerIpCliente(req);
+
+    // 3. Verificar si la IP ya está en lista negra de Redis
+    const motivoBloqueo = await redisClient.get(`bloqueo:${ip}`);
+    if (motivoBloqueo) {
       return res.status(403).json({
         error: 'Acceso denegado por Mnemósine WAF.',
-        motivo: estaBloqueada,
+        motivo: motivoBloqueo,
         ip
       });
     }
 
-    // 2. RATE LIMITING REAL (Máximo 12 peticiones cada 30 segundos por IP)
-    const peticiones = await redisClient.incr(claveRateLimit);
-    if (peticiones === 1) {
-      await redisClient.expire(claveRateLimit, 30);
-    }
+    // 4. Detección de scrapers por User-Agent automatizado
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const firmasBot = ['python-requests', 'scrapy', 'curl/', 'wget/', 'headless', 'bot', 'spider', 'httpclient'];
+    const esBot = firmasBot.some((firma) => userAgent.includes(firma));
 
-    const esBotConocido = FIRMAS_SCRAPERS_REALES.some(firma => userAgent.includes(firma));
-    const excedioLimite = peticiones > 12;
-
-    // 3. ENCOLAR AUDITORÍA PASIVA EN BULLMQ (Solo si toca imágenes, rutas o es sospechoso)
-    if (req.originalUrl.startsWith('/protegidas/') || esBotConocido || excedioLimite) {
-      await peticionesWebQueue.add('analisis-trafico', {
-        ip,
-        userAgent: req.headers['user-agent'] || 'Sin User-Agent',
-        endpoint: req.originalUrl,
-        body: { metodo: req.method, peticionesEnVentana: peticiones },
-        timestamp: new Date()
+    if (!userAgent || esBot) {
+      const motivo = 'Scraper o cliente automatizado detectado';
+      await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
+      return res.status(403).json({
+        error: 'Acceso denegado por Mnemósine WAF.',
+        motivo,
+        ip
       });
     }
 
-    // 4. BLOQUEO ACTIVO INMEDIATO SI EXCEDE RATE LIMIT
-    if (excedioLimite) {
-      await redisClient.set(claveBloqueo, 'Rate Limit excedido (Scraping masivo)', 'EX', 120); // Bloqueo por 2 minutos
+    // 5. Rate-limiting para visitantes anónimos (máximo 60 peticiones por minuto)
+    const claveTrafico = `trafico:${ip}`;
+    const peticiones = await redisClient.incr(claveTrafico);
+
+    if (peticiones === 1) {
+      await redisClient.expire(claveTrafico, 60);
+    }
+
+    if (peticiones > 60) {
+      const motivo = 'Exceso de tasa de peticiones (Posible scraping masivo)';
+      await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
       return res.status(429).json({
-        error: 'Demasiadas peticiones. IP bloqueada temporalmente por Mnemósine.',
-        reintentarEnSegundos: 120
+        error: 'Acceso denegado por Mnemósine WAF.',
+        motivo,
+        ip
       });
     }
 
     next();
   } catch (error) {
-    console.error('[Escudo Middleware] Error en Redis:', error);
+    console.error('Error en escudoMiddleware:', error);
     next();
   }
 };
 
-// Controlador específico para la trampa Honeypot
+// Trampa activa vinculada a GET /api/honeypot/dataset-hd en routes.js
 const activarHoneypot = async (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-  const claveBloqueo = `bloqueo:ip:${ip}`;
+  try {
+    const ip = obtenerIpCliente(req);
+    const motivo = 'Trampa Honeypot activada (Bot rastreador)';
+    await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
 
-  // Bloqueo inmediato de 5 minutos por caer en trampa invisible
-  await redisClient.set(claveBloqueo, 'Trampa Honeypot activada (Bot rastreador)', 'EX', 300);
-
-  await peticionesWebQueue.add('analisis-trafico', {
-    ip,
-    userAgent: `HONEYPOT-TRAP | ${req.headers['user-agent'] || 'Desconocido'}`,
-    endpoint: req.originalUrl,
-    body: { alerta: 'Acceso a ruta prohibida en robots.txt' },
-    timestamp: new Date()
-  });
-
-  res.status(403).json({ error: 'Acceso prohibido. Trampa de seguridad activada.' });
+    return res.status(403).json({
+      error: 'Acceso denegado por Mnemósine WAF.',
+      motivo,
+      ip
+    });
+  } catch (error) {
+    console.error('Error al activar Honeypot:', error);
+    return res.status(403).json({ error: 'Acceso denegado.' });
+  }
 };
 
 module.exports = { escudoMiddleware, activarHoneypot };

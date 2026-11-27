@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mnemósine | Acceso y Registro de Creadores</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --card: #131722;
+      --border: #23293a;
+      --accent: #7c5cff;
+      --accent-hover: #6946ff;
+      --text: #e6e9f0;
+      --muted: #8b94a8;
+      --danger: #ff4d6d;
+      --success: #2ec4b6;
+    }
+
+    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #161b29 0%, var(--bg) 70%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .contenedor {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+    }
+
+    .marca {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .marca h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .marca p {
+      margin: 0.35rem 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #0d1018;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 0.6rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.activo {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .formulario { display: none; }
+    .formulario.activo { display: block; }
+
+    .campo {
+      margin-bottom: 1rem;
+    }
+
+    .campo label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      background: #0d1018;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    .campo input:focus {
+      border-color: var(--accent);
+    }
+
+    .campo small {
+      display: block;
+      margin-top: 0.3rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Trampa Honeypot: invisible para humanos, detectable por scrapers que leen el DOM */
+    .campo-verificacion-extra {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover { background: var(--accent-hover); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .alerta {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .alerta.error {
+      display: block;
+      background: rgba(255, 77, 109, 0.12);
+      border: 1px solid var(--danger);
+      color: #ff8fa3;
+    }
+
+    .alerta.exito {
+      display: block;
+      background: rgba(46, 196, 182, 0.12);
+      border: 1px solid var(--success);
+      color: #72efdd;
+    }
+
+    .volver {
+      display: block;
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .volver:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <div class="marca">
+      <h1>Mnemósine</h1>
+      <p>Protección Esteganográfica y Defensa Anti-Scraping</p>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn activo" id="tab-login">Iniciar Sesión</button>
+      <button type="button" class="tab-btn" id="tab-registro">Soy Artista</button>
+    </div>
+
+    <!-- FORMULARIO DE INICIO DE SESIÓN -->
+    <form id="form-login" class="formulario activo">
+      <div class="campo">
+        <label for="login-email">Correo electrónico</label>
+        <input type="email" id="login-email" placeholder="artista@dominio.com" required />
+      </div>
+      <div class="campo">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn-submit" id="btn-login">Entrar al Panel</button>
+    </form>
+
+    <!-- FORMULARIO DE REGISTRO ANTI-BOT -->
+    <form id="form-registro" class="formulario">
+      <div class="campo">
+        <label for="reg-nombre">Nombre artístico o firma</label>
+        <input type="text" id="reg-nombre" placeholder="Ej. NocturnaArt" required />
+      </div>
+      <div class="campo">
+        <label for="reg-email">Correo electrónico</label>
+        <input type="email" id="reg-email" placeholder="creador@dominio.com" required />
+      </div>
+      <div class="campo">
+        <label for="reg-portafolio">Enlace a portafolio verificable</label>
+        <input type="url" id="reg-portafolio" placeholder="https://www.artstation.com/tu-usuario" required />
+        <small>ArtStation, Behance, Instagram, Pixiv o web personal para curaduría manual.</small>
+      </div>
+      <div class="campo">
+        <label for="reg-password">Contraseña (mínimo 8 caracteres)</label>
+        <input type="password" id="reg-password" minlength="8" placeholder="••••••••" required />
+      </div>
+
+      <!-- Campo Honeypot invisible para humanos -->
+      <div class="campo-verificacion-extra" aria-hidden="true">
+        <label for="sitio_secundario">Sitio web secundario (dejar vacío)</label>
+        <input type="text" id="sitio_secundario" name="sitio_secundario" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-registro">Solicitar Verificación</button>
+    </form>
+
+    <div

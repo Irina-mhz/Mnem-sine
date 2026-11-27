@@ -1,316 +1,559 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mnemósine - Centro de Comando</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mnemósine | Centro de Comando WAF y Curaduría</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --card: #131722;
+      --border: #23293a;
+      --accent: #7c5cff;
+      --accent-hover: #6946ff;
+      --text: #e6e9f0;
+      --muted: #8b94a8;
+      --success: #2ec4b6;
+      --warning: #ffb703;
+      --danger: #ff4d6d;
+    }
+
+    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-admin {
+      background: rgba(124, 92, 255, 0.18);
+      border: 1px solid var(--accent);
+      color: #c4b5fd;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .nav-acciones {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-acciones a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+
+    .nav-acciones a:hover { color: var(--text); }
+
+    .btn-salir {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-salir:hover { border-color: var(--danger); color: #ff8fa3; }
+
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .kpi-card, .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem;
+    }
+
+    .kpi-card span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .kpi-card strong {
+      font-size: 1.65rem;
+      color: var(--text);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 1.08rem;
+    }
+
+    .tabla-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.75rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    td a {
+      color: #9d85ff;
+      text-decoration: none;
+    }
+
+    td a:hover { text-decoration: underline; }
+
+    .estado-pill {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .estado-pendiente {
+      background: rgba(255, 183, 3, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(255, 183, 3, 0.4);
+    }
+
+    .estado-verificado {
+      background: rgba(46, 196, 182, 0.15);
+      color: #72efdd;
+      border: 1px solid rgba(46, 196, 182, 0.4);
+    }
+
+    .estado-rechazado {
+      background: rgba(255, 77, 109, 0.15);
+      color: #ff8fa3;
+      border: 1px solid rgba(255, 77, 109, 0.4);
+    }
+
+    .acciones-fila {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .btn-mini {
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-aprobar {
+      background: var(--success);
+      color: #071b18;
+    }
+
+    .btn-rechazar {
+      background: rgba(255, 77, 109, 0.2);
+      border: 1px solid var(--danger);
+      color: #ff8fa3;
+    }
+
+    .btn-refrescar {
+      background: #1b2131;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-refrescar:hover { border-color: var(--accent); }
+
+    .grid-dos {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 880px) {
+      .grid-dos { grid-template-columns: 1fr; }
+    }
+
+    .campo { margin-bottom: 0.9rem; }
+
+    .campo label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      background: #0d1018;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.88rem;
+    }
+
+    .btn-primario {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primario:hover { background: var(--accent-hover); }
+  </style>
 </head>
-<body class="bg-gray-900 text-gray-200 font-sans p-6">
-    <div class="max-w-7xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-teal-400">Mnemósine</h1>
-                <p class="text-sm text-gray-400">Plataforma de Auditoría, Trazabilidad y Protección Esteganográfica LSB</p>
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <button onclick="simularTrafico()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition text-sm font-medium">
-                    Visita Legítima
-                </button>
-                <button onclick="simularAtaque()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
-                    ⚠️ Simular Ataque Scraper
-                </button>
-            </div>
-        </header>
-
-        <!-- Panel 1: Estadísticas con Aggregation Framework -->
-        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 border border-gray-700">
-            <h2 class="text-xl font-semibold mb-4 text-blue-400 flex items-center gap-2">📊 Inteligencia de Amenazas (MongoDB Aggregation)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="panel-estadisticas">
-                <p class="text-gray-400">Cargando métricas en tiempo real...</p>
-            </div>
-        </div>
-
-        <!-- Panel 2: Protección Esteganográfica y Verificador Forense -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Formulario de Subida Real -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
-                <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🔐 Proteger Nueva Obra (Inyección LSB)</h2>
-                <form id="form-subir-obra" onsubmit="subirObraReal(event)" class="flex flex-col gap-4">
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Título de la Obra</label>
-                        <input type="text" id="titulo-obra" required placeholder="Ej. Retrato Cyberpunk 01" 
-                            class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Seleccionar Imagen (.jpg, .png)</label>
-                        <input type="file" id="archivo-obra" accept="image/*" required 
-                            class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500">
-                    </div>
-                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded shadow transition">
-                        Inyectar Marca de Agua y Registrar
-                    </button>
-                </form>
-            </div>
-
-            <!-- Verificador Forense de Esteganografía -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
-                <h2 class="text-xl font-semibold mb-4 text-teal-400 flex items-center gap-2">🔍 Auditoría Forense (Extractor LSB)</h2>
-                <p class="text-xs text-gray-400 mb-4">Sube una imagen protegida para leer el bit menos significativo (LSB) del canal rojo y verificar su autoría oculta.</p>
-                <input type="file" accept="image/png" onchange="verificarEsteganografia(event)" 
-                    class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 mb-4 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-500">
-                <div id="resultado-forense" class="bg-gray-900 p-3 rounded border border-gray-700 text-xs font-mono text-gray-400 min-h-[60px] flex items-center">
-                    Esperando imagen para escaneo de píxeles...
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel 3: Monitor de Logs y Bóveda -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Monitor de Seguridad -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-semibold mb-4 text-red-400 flex items-center gap-2">🛡️ Monitor de Seguridad (Logs)</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-700 text-gray-300 text-sm">
-                                <th class="p-3 rounded-tl-lg">Amenaza</th>
-                                <th class="p-3">IP / Bot</th>
-                                <th class="p-3">Acción Tomada</th>
-                                <th class="p-3 rounded-tr-lg">Hora</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-logs" class="text-sm divide-y divide-gray-700"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Bóveda de Obras Protegidas -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-semibold mb-4 text-purple-400 flex items-center gap-2">🖼️ Bóveda de Obras Protegidas</h2>
-                <div id="lista-obras" class="grid grid-cols-1 gap-4"></div>
-            </div>
-        </div>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Mnemósine</h1>
+      <span class="badge-admin">Centro de Comando Admin</span>
     </div>
+    <div class="nav-acciones">
+      <a href="/artista.html">Vista Estudio</a>
+      <a href="/index.html">Galería Pública</a>
+      <button type="button" class="btn-salir" id="btn-logout">Cerrar Sesión</button>
+    </div>
+  </header>
 
-    <script>
-        let adminToken = sessionStorage.getItem('mnemosine_token');
+  <main>
+    <!-- MÉTRICAS DE TELEMETRÍA WAF -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <span>Ataques Bloqueados (WAF / Honeypot)</span>
+        <strong id="kpi-ataques">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Artistas Pendientes de Revisión</span>
+        <strong id="kpi-pendientes">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Obras Protegidas en Catálogo</span>
+        <strong id="kpi-obras">0</strong>
+      </div>
+    </section>
 
-        async function autenticar() {
-            if (adminToken) return true;
-            const pass = prompt('🔐 Ingresa la contraseña de Administradora de Mnemósine:');
-            if (!pass) {
-                window.location.href = '/';
-                return false;
-            }
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pass })
-            });
-            if (res.ok) {
-                adminToken = pass;
-                sessionStorage.setItem('mnemosine_token', pass);
-                return true;
-            } else {
-                alert('❌ Contraseña incorrecta');
-                window.location.href = '/';
-                return false;
-            }
+    <!-- CURADURÍA Y APROBACIÓN DE ARTISTAS -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Solicitudes y Cuentas de Artistas</h2>
+        <button type="button" class="btn-refrescar" onclick="cargarArtistas()">Actualizar Lista</button>
+      </div>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre Artístico</th>
+              <th>Correo</th>
+              <th>Portafolio Verificable</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-artistas">
+            <tr><td colspan="5" style="color: var(--muted);">Cargando solicitudes...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBIDA DIRECTA ADMIN + BITÁCORA DE AUDITORÍA -->
+    <section class="grid-dos">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Inyección LSB Directa</h2>
+        </div>
+        <form id="form-admin-obra">
+          <div class="campo">
+            <label for="titulo-obra">Título de la obra</label>
+            <input type="text" id="titulo-obra" placeholder="Ej. Archivo Maestro 01" required />
+          </div>
+          <div class="campo">
+            <label for="archivo-obra">Imagen original (PNG/JPG)</label>
+            <input type="file" id="archivo-obra" accept="image/png, image/jpeg" required />
+          </div>
+          <button type="submit" class="btn-primario" id="btn-subir-admin">Proteger y Publicar</button>
+        </form>
+        <p id="msg-subida" style="font-size: 0.82rem; color: var(--success); margin-top: 0.75rem;"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Bitácora de Tráfico y Amenazas (Tiempo Real)</h2>
+          <button type="button" class="btn-refrescar" onclick="cargarLogs()">Refrescar Logs</button>
+        </div>
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>IP Origen</th>
+                <th>Endpoint</th>
+                <th>Nivel</th>
+                <th>User-Agent</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-logs">
+              <tr><td colspan="4" style="color: var(--muted);">Cargando auditoría...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('mnemosine_token');
+    const rol = localStorage.getItem('mnemosine_rol');
+
+    // Guardia de sesión: solo permite paso si existe token JWT y el rol es admin
+    if (!token || rol !== 'admin') {
+      window.location.href = '/acceso.html';
+    }
+
+    const headersAuth = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      localStorage.removeItem('mnemosine_token');
+      localStorage.removeItem('mnemosine_rol');
+      localStorage.removeItem('mnemosine_autor');
+      window.location.href = '/acceso.html';
+    });
+
+    function manejarExpiracion(res) {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('mnemosine_token');
+        localStorage.removeItem('mnemosine_rol');
+        localStorage.removeItem('mnemosine_autor');
+        window.location.href = '/acceso.html';
+        return true;
+      }
+      return false;
+    }
+
+    // 1. Cargar y gestionar artistas registrados
+    async function cargarArtistas() {
+      const tbody = document.getElementById('tabla-artistas');
+      try {
+        const res = await fetch('/api/admin/artistas', { headers: headersAuth });
+        if (manejarExpiracion(res)) return;
+
+        const artistas = await res.json();
+        const pendientes = artistas.filter(a => a.estado === 'pendiente').length;
+        document.getElementById('kpi-pendientes').textContent = pendientes;
+
+        if (!artistas.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="color: var(--muted);">No hay solicitudes de artistas registradas.</td></tr>';
+          return;
         }
 
-        const endpointLogs = '/api/logs';
-        const endpointObras = '/api/obras';
-        const endpointEstadisticas = '/api/estadisticas';
+        tbody.innerHTML = '';
+        artistas.forEach(art => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${art.nombreArtistico}</strong></td>
+            <td>${art.email}</td>
+            <td><a href="${art.portafolioUrl}" target="_blank" rel="noopener noreferrer">Ver portafolio ↗</a></td>
+            <td><span class="estado-pill estado-${art.estado}">${art.estado}</span></td>
+            <td class="acciones-fila">
+              ${art.estado !== 'verificado' ? `<button class="btn-mini btn-aprobar" onclick="cambiarEstadoArtista('${art._id}', 'verificado')">Aprobar</button>` : ''}
+              ${art.estado !== 'rechazado' ? `<button class="btn-mini btn-rechazar" onclick="cambiarEstadoArtista('${art._id}', 'rechazado')">Rechazar</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color: #ff8fa3;">Error al cargar artistas.</td></tr>';
+      }
+    }
 
-        async function simularTrafico() {
-            await fetch(endpointLogs, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: '/portafolio/arte' })
-            });
-            cargarDatos();
+    async function cambiarEstadoArtista(id, nuevoEstado) {
+      try {
+        const res = await fetch(`/api/admin/artistas/${id}`, {
+          method: 'PATCH',
+          headers: headersAuth,
+          body: JSON.stringify({ estado: nuevoEstado })
+        });
+        if (manejarExpiracion(res)) return;
+
+        if (res.ok) {
+          cargarArtistas();
+        } else {
+          const err = await res.json();
+          alert(err.error || 'No se pudo actualizar el estado.');
+        }
+      } catch (e) {
+        alert('Error de red al actualizar artista.');
+      }
+    }
+
+    // 2. Cargar estadísticas de MongoDB Aggregation
+    async function cargarEstadisticas() {
+      try {
+        const res = await fetch('/api/estadisticas', { headers: headersAuth });
+        if (manejarExpiracion(res)) return;
+
+        const { datos } = await res.json();
+        const totalAtaques = datos?.ataquesBloqueados?.[0]?.total || 0;
+        document.getElementById('kpi-ataques').textContent = totalAtaques;
+      } catch (err) {
+        console.error('Error al cargar estadísticas:', err);
+      }
+    }
+
+    // 3. Cargar bitácora de auditoría
+    async function cargarLogs() {
+      const tbody = document.getElementById('tabla-logs');
+      try {
+        const res = await fetch('/api/logs', { headers: headersAuth });
+        if (manejarExpiracion(res)) return;
+
+        const logs = await res.json();
+        if (!logs.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="color: var(--muted);">Sin registros de tráfico aún.</td></tr>';
+          return;
         }
 
-        async function simularAtaque() {
-            const fakeIp = `192.168.1.${Math.floor(Math.random() * 255)}`;
-            await fetch(endpointLogs, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Simulated-Agent': 'bad-scraper-bot-IA',
-                    'X-Forwarded-For': fakeIp
-                },
-                body: JSON.stringify({ endpoint: '/download/all' })
-            });
-            cargarDatos();
+        tbody.innerHTML = '';
+        logs.forEach(log => {
+          const tr = document.createElement('tr');
+          const nivel = log.nivelAmenaza || 'BAJO';
+          tr.innerHTML = `
+            <td>${log.ip || '-'}</td>
+            <td>${log.endpoint || '-'}</td>
+            <td><span class="estado-pill ${nivel === 'ALTO' ? 'estado-rechazado' : 'estado-verificado'}">${nivel}</span></td>
+            <td style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${log.userAgent || ''}">${log.userAgent || '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color: #ff8fa3;">Error al cargar logs.</td></tr>';
+      }
+    }
+
+    // 4. Contar obras publicadas
+    async function cargarConteoObras() {
+      try {
+        const res = await fetch('/api/obras');
+        const obras = await res.json();
+        document.getElementById('kpi-obras').textContent = obras.length;
+      } catch (err) {
+        console.error('Error al contar obras:', err);
+      }
+    }
+
+    // 5. Subida directa desde panel admin con JWT
+    document.getElementById('form-admin-obra').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg-subida');
+      const btn = document.getElementById('btn-subir-admin');
+      btn.disabled = true;
+      msg.textContent = '';
+
+      const formData = new FormData();
+      formData.append('titulo', document.getElementById('titulo-obra').value.trim());
+      formData.append('imagen', document.getElementById('archivo-obra').files[0]);
+
+      try {
+        const res = await fetch('/api/obras', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        if (manejarExpiracion(res)) return;
+
+        if (res.ok) {
+          document.getElementById('form-admin-obra').reset();
+          msg.textContent = 'Obra enviada a cola esteganográfica.';
+          setTimeout(cargarConteoObras, 3500);
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Error al subir la obra.');
         }
+      } catch (err) {
+        alert('Error de conexión al subir.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
-        async function subirObraReal(event) {
-            event.preventDefault();
-            const titulo = document.getElementById('titulo-obra').value;
-            const fileInput = document.getElementById('archivo-obra');
-            if (!fileInput.files.length) return;
-
-            const formData = new FormData();
-            formData.append('titulo', titulo);
-            formData.append('autorId', 'artista_eva');
-            formData.append('imagen', fileInput.files[0]);
-
-            const res = await fetch(endpointObras, {
-                method: 'POST',
-                headers: { 'x-admin-token': adminToken },
-                body: formData
-            });
-
-            if (!res.ok) {
-                alert('Error de autorización al subir obra.');
-                return;
-            }
-
-            document.getElementById('form-subir-obra').reset();
-            setTimeout(cargarDatos, 800);
-        }
-
-        function verificarEsteganografia(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const resultadoDiv = document.getElementById('resultado-forense');
-            resultadoDiv.innerHTML = '<span class="text-yellow-400">Escaneando bits menos significativos...</span>';
-
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                let bits = '';
-                let textoExtraido = '';
-
-                const limite = Math.min(imageData.length / 4, 2000);
-                for (let i = 0; i < limite; i++) {
-                    const redChannel = imageData[i * 4];
-                    bits += (redChannel & 1).toString();
-
-                    if (bits.length === 8) {
-                        const charCode = parseInt(bits, 2);
-                        textoExtraido += String.fromCharCode(charCode);
-                        bits = '';
-
-                        if (textoExtraido.endsWith('|END')) {
-                            const firmaLimpia = textoExtraido.replace('|END', '');
-                            resultadoDiv.innerHTML = `<span class="text-teal-400 font-bold">✅ FIRMA DETECTADA: ${firmaLimpia}</span>`;
-                            return;
-                        }
-                    }
-                }
-                resultadoDiv.innerHTML = `<span class="text-red-400">❌ No se encontró firma válida de Mnemósine en los píxeles.</span>`;
-            };
-            img.src = URL.createObjectURL(file);
-        }
-
-        async function descargarObra(url, titulo) {
-            try {
-                const respuesta = await fetch(url);
-                const blob = await respuesta.blob();
-                const urlLocal = window.URL.createObjectURL(blob);
-                const enlace = document.createElement('a');
-                enlace.href = urlLocal;
-                enlace.download = `${titulo.replace(/\s+/g, '_')}_protegida.png`;
-                document.body.appendChild(enlace);
-                enlace.click();
-                enlace.remove();
-                window.URL.revokeObjectURL(urlLocal);
-            } catch (error) {
-                console.error('Error al descargar la obra:', error);
-                window.open(url, '_blank');
-            }
-        }
-
-
-        async function cargarDatos() {
-            if (!adminToken) return;
-            const headersAuth = { 'x-admin-token': adminToken };
-
-            const [resLogs, resObras, resStats] = await Promise.all([
-                fetch(endpointLogs, { headers: headersAuth }),
-                fetch(endpointObras),
-                fetch(endpointEstadisticas, { headers: headersAuth })
-            ]);
-
-            if (resLogs.status === 401) {
-                sessionStorage.removeItem('mnemosine_token');
-                window.location.href = '/';
-                return;
-            }
-
-            const logs = await resLogs.json();
-            const obras = await resObras.json();
-            const stats = await resStats.json();
-
-            const datosStats = stats.datos;
-            const ataquesTotales = datosStats.ataquesBloqueados.length > 0 ? datosStats.ataquesBloqueados[0].total : 0;
-            const topIp = datosStats.topIpsMaliciosas.length > 0 ? datosStats.topIpsMaliciosas[0]._id : 'Ninguna';
-
-            document.getElementById('panel-estadisticas').innerHTML = `
-                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-red-500">
-                    <span class="text-sm text-gray-400">Total Ataques Bloqueados</span>
-                    <span class="text-4xl font-bold text-red-400 mt-2">${ataquesTotales}</span>
-                </div>
-                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-orange-500">
-                    <span class="text-sm text-gray-400">IP Más Agresiva (Scraper)</span>
-                    <span class="text-xl font-mono text-orange-400 mt-2 truncate w-full text-center">${topIp}</span>
-                </div>
-                <div class="bg-gray-700 p-4 rounded-lg flex flex-col items-center justify-center border-b-4 border-blue-500">
-                    <span class="text-sm text-gray-400">Rendimiento NoSQL</span>
-                    <span class="text-md text-blue-300 mt-2 text-center">Pipeline ejecutado en tiempo real</span>
-                </div>
-            `;
-
-            document.getElementById('tabla-logs').innerHTML = logs.map(log => `
-                <tr class="hover:bg-gray-750 transition">
-                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${log.nivelAmenaza === 'ALTO' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}">${log.nivelAmenaza}</span></td>
-                    <td class="p-3 truncate max-w-[150px]">${log.ip || log.userAgent}</td>
-                    <td class="p-3 text-gray-400">${log.accionMitigadora || 'Permitido'}</td>
-                    <td class="p-3 text-gray-500">${new Date(log.createdAt).toLocaleTimeString()}</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('lista-obras').innerHTML = obras.map(obra => {
-                const tieneImagenReal = obra.rutaArchivo && (obra.rutaArchivo.startsWith('/protegidas/') || obra.rutaArchivo.startsWith('http'));
-                return `
-                <div class="bg-gray-700 p-4 rounded flex flex-col sm:flex-row gap-4 border-l-4 border-purple-500 items-center">
-                    ${tieneImagenReal ? `<img src="${obra.rutaArchivo}" alt="${obra.titulo}" class="w-20 h-20 object-cover rounded border border-gray-500 shrink-0">` : ''}
-                    <div class="flex flex-col gap-2 w-full overflow-hidden">
-                        <div class="flex justify-between items-center gap-2">
-                            <h3 class="font-bold text-gray-100 truncate">${obra.titulo}</h3>
-                            ${tieneImagenReal 
-                                ? `<button type="button" onclick="descargarObra('${obra.rutaArchivo}', '${obra.titulo}')">
-                                    Descargar PNG Protegido
-                                    </button>`
-                                : `<span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded shrink-0">Simulado</span>`
-                            }
-                        </div>
-                        <p class="text-xs font-mono text-gray-400 break-all bg-gray-900 p-2 rounded border border-gray-600">
-                            Hash LSB: ${obra.marcaAgua?.hashRastreable || 'Procesando...'}
-                        </p>
-                    </div>
-                </div>
-            `}).join('');
-        }
-
-        (async () => {
-            if (await autenticar()) {
-                cargarDatos();
-                setInterval(cargarDatos, 3000);
-            }
-        })();
-    </script>
-<!-- Trampa Honeypot invisible para humanos, visible para scrapers DOM -->
-    <a href="/api/honeypot/dataset-hd" style="display:none;" aria-hidden="true">Descargar Dataset Completo HD</a>
+    // Inicializar datos del panel
+    cargarArtistas();
+    cargarEstadisticas();
+    cargarLogs();
+    cargarConteoObras();
+  </script>
 </body>
 </html>

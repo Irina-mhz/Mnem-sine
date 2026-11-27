@@ -9,7 +9,7 @@ const registrarTraficoWeb = async (req, res) => {
       // Priorizamos la IP simulada (X-Forwarded-For) si existe, si no, tomamos la real
       ip: req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress,
       // Priorizamos el agente simulado, si no, tomamos el del navegador
-      userAgent: req.headers['x-simulated-agent'] || req.headers['user-agent'],
+      userAgent: req.headers['user-agent'],
       endpoint: req.originalUrl,
       body: req.body,
       timestamp: new Date()
@@ -35,7 +35,7 @@ const subirObra = async (req, res) => {
       nombreArchivo: req.file.filename,
       metadatos: {
         titulo: req.body.titulo || req.file.originalname,
-        autorId: req.body.autorId || 'artista_eva',
+        autorId: req.usuario ? req.usuario.nombreArtistico : (req.body.autorId || 'Anónimo'),
         extras: {
           mimetype: req.file.mimetype,
           tamanoBytes: req.file.size
