@@ -10,6 +10,22 @@ const obtenerIpCliente = (req) => {
   return req.ip || req.connection?.remoteAddress || '0.0.0.0';
 };
 
+const registrarBloqueoWaf = async (req, ip, motivo, accionMitigadora, detallesVariables = {}) => {
+  try {
+    await LogAuditoria.create({
+      ip,
+      userAgent: req.headers['user-agent'] || 'Desconocido',
+      endpoint: req.originalUrl,
+      nivelAmenaza: 'ALTO',
+      dictamenAnomalia: true,
+      accionMitigadora,
+      detallesVariables
+    });
+  } catch (err) {
+    console.error('Error al registrar bloqueo WAF en LogAuditoria:', err);
+  }
+};
+
 const escudoMiddleware = async (req, res, next) => {
   try {
     // 1. Permitir acceso a las vistas HTML de autenticación y paneles
@@ -54,6 +70,7 @@ const escudoMiddleware = async (req, res, next) => {
     if (!userAgent || esBot) {
       const motivo = 'Scraper o cliente automatizado detectado';
       await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
+      await registrarBloqueoWaf(req, ip, motivo, 'Bloqueo User-Agent en Redis (HTTP 403)', { filtro: 'user-agent' });
       return res.status(403).json({
         error: 'Acceso denegado por Mnemósine WAF.',
         motivo,
@@ -72,6 +89,7 @@ const escudoMiddleware = async (req, res, next) => {
     if (peticiones > 60) {
       const motivo = 'Exceso de tasa de peticiones (Posible scraping masivo)';
       await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
+      await registrarBloqueoWaf(req, ip, motivo, 'Rate-Limit en Redis (HTTP 429)', { peticionesEnVentana: peticiones });
       return res.status(429).json({
         error: 'Acceso denegado por Mnemósine WAF.',
         motivo,
@@ -93,15 +111,13 @@ const activarHoneypot = async (req, res) => {
     const motivo = 'Trampa Honeypot activada (Bot rastreador)';
     await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
 
-    await LogAuditoria.create({
+    await registrarBloqueoWaf(
+      req,
       ip,
-      userAgent: req.headers['user-agent'] || 'Desconocido',
-      endpoint: req.originalUrl,
-      nivelAmenaza: 'ALTO',
-      dictamenAnomalia: true,
-      accionMitigadora: 'Trampa Honeypot + Bloqueo en Redis (HTTP 403)',
-      detallesVariables: { trampa: 'dataset-hd' }
-    });
+      motivo,
+      'Trampa Honeypot + Bloqueo en Redis (HTTP 403)',
+      { trampa: 'dataset-hd' }
+    );
 
     return res.status(403).json({
       error: 'Acceso denegado por Mnemósine WAF.',
@@ -113,7 +129,5 @@ const activarHoneypot = async (req, res) => {
     return res.status(403).json({ error: 'Acceso denegado.' });
   }
 };
-
-const LogAuditoria = require('../models/LogAuditoria');
 
 module.exports = { escudoMiddleware, activarHoneypot };
