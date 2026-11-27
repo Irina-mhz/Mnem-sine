@@ -307,10 +307,16 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok) return mostrarMensaje(data.error || 'No se pudo procesar el registro.', true);
+      if (!res.ok) return mostrarMensaje(data.error || 'Error al iniciar sesión.', true);
 
-      mostrarMensaje(data.mensaje || 'Solicitud enviada. Espera la aprobación de la administradora.');
-      formRegistro.reset();
+      const rol = data.rol || data.usuario?.rol;
+      const autor = data.nombreArtistico || data.usuario?.nombreArtistico || '';
+
+      localStorage.setItem('mnemosine_token', data.token);
+      localStorage.setItem('mnemosine_rol', rol);
+      localStorage.setItem('mnemosine_autor', autor);
+
+      window.location.href = rol === 'admin' ? '/admin.html' : '/artista.html';
     } catch (err) {
       mostrarMensaje('Error de conexión con el servidor.', true);
     }
