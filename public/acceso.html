@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mnemósine | Acceso y Registro de Creadores</title>
   <style>
+    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
     :root {
       --bg: #0b0d12;
       --card: #131722;
@@ -16,8 +18,6 @@
       --danger: #ff4d6d;
       --success: #2ec4b6;
     }
-
-    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
     body {
       margin: 0;
@@ -148,39 +148,25 @@
     .btn-submit:hover { background: var(--accent-hover); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .alerta {
-      margin-top: 1rem;
+    .btn-invitado {
+      display: block;
+      width: 100%;
       padding: 0.75rem;
+      border: 1px solid #3b4259;
       border-radius: 8px;
-      font-size: 0.85rem;
-      display: none;
-      line-height: 1.4;
-    }
-
-    .alerta.error {
-      display: block;
-      background: rgba(255, 77, 109, 0.12);
-      border: 1px solid var(--danger);
-      color: #ff8fa3;
-    }
-
-    .alerta.exito {
-      display: block;
-      background: rgba(46, 196, 182, 0.12);
-      border: 1px solid var(--success);
-      color: #72efdd;
-    }
-
-    .volver {
-      display: block;
-      text-align: center;
-      margin-top: 1.25rem;
-      font-size: 0.82rem;
-      color: var(--muted);
+      color: #a5b4fc;
       text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: rgba(124, 92, 255, 0.12);
+      transition: all 0.2s;
     }
 
-    .volver:hover { color: var(--text); }
+    .btn-invitado:hover {
+      background: rgba(124, 92, 255, 0.22);
+      color: #fff;
+      border-color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -203,136 +189,131 @@
       </div>
       <div class="campo">
         <label for="login-password">Contraseña</label>
-    <input type="password" id="login-password" placeholder="••••••••" required />
+        <input type="password" id="login-password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn-submit" id="btn-login">Entrar al Panel</button>
+    </form>
+
+    <!-- FORMULARIO DE REGISTRO ANTI-BOT -->
+    <form id="form-registro" class="formulario">
+      <div class="campo">
+        <label for="reg-nombre">Nombre artístico o firma</label>
+        <input type="text" id="reg-nombre" placeholder="Ej. NocturnaArt" required />
+      </div>
+      <div class="campo">
+        <label for="reg-email">Correo electrónico</label>
+        <input type="email" id="reg-email" placeholder="creador@dominio.com" required />
+      </div>
+      <div class="campo">
+        <label for="reg-portafolio">Enlace a portafolio verificable</label>
+        <input type="url" id="reg-portafolio" placeholder="https://www.artstation.com/tu-usuario" required />
+        <small>ArtStation, Behance, Instagram, Pixiv o web personal para curaduría manual.</small>
+      </div>
+      <div class="campo">
+        <label for="reg-password">Contraseña (mínimo 8 caracteres)</label>
+        <input type="password" id="reg-password" minlength="8" placeholder="••••••••" required />
+      </div>
+
+      <!-- Campo Honeypot invisible para humanos -->
+      <div class="campo-verificacion-extra" aria-hidden="true">
+        <label for="sitio_secundario">Sitio web secundario (dejar vacío)</label>
+        <input type="text" id="sitio_secundario" name="sitio_secundario" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-registro">Solicitar Verificación</button>
+    </form>
+
+    <div id="mensaje-estado" style="margin-top: 1rem; text-align: center; font-size: 0.88rem; font-weight: 600;"></div>
+
+    <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: center;">
+      <a href="/index.html" class="btn-invitado">
+        Entrar como Invitado (Galería Pública) →
+      </a>
+    </div>
   </div>
-  <button type="submit" class="btn-submit" id="btn-login">Entrar al Panel</button>
-</form>
 
-<!-- FORMULARIO DE REGISTRO ANTI-BOT -->
-<form id="form-registro" class="formulario">
-  <div class="campo">
-    <label for="reg-nombre">Nombre artístico o firma</label>
-    <input type="text" id="reg-nombre" placeholder="Ej. NocturnaArt" required />
-  </div>
-  <div class="campo">
-    <label for="reg-email">Correo electrónico</label>
-    <input type="email" id="reg-email" placeholder="creador@dominio.com" required />
-  </div>
-  <div class="campo">
-    <label for="reg-portafolio">Enlace a portafolio verificable</label>
-    <input type="url" id="reg-portafolio" placeholder="https://www.artstation.com/tu-usuario" required />
-    <small>ArtStation, Behance, Instagram, Pixiv o web personal para curaduría manual.</small>
-  </div>
-  <div class="campo">
-    <label for="reg-password">Contraseña (mínimo 8 caracteres)</label>
-    <input type="password" id="reg-password" minlength="8" placeholder="••••••••" required />
-  </div>
+  <script>
+    const tiempoInicio = Date.now();
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegistro = document.getElementById('tab-registro');
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+    const mensajeEstado = document.getElementById('mensaje-estado');
 
-  <!-- Campo Honeypot invisible para humanos -->
-  <div class="campo-verificacion-extra" aria-hidden="true">
-    <label for="sitio_secundario">Sitio web secundario (dejar vacío)</label>
-    <input type="text" id="sitio_secundario" name="sitio_secundario" tabindex="-1" autocomplete="off" />
-  </div>
-
-  <button type="submit" class="btn-submit" id="btn-registro">Solicitar Verificación</button>
-</form>
-
-<div id="mensaje-estado" style="margin-top: 1rem; text-align: center; font-weight: bold;"></div>
-
-<div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #23293a; text-align: center;">
-  <a href="/index.html" style="display: block; width: 100%; padding: 0.75rem; border: 1px solid #3b4259; border-radius: 8px; color: #a5b4fc; text-decoration: none; font-size: 0.9rem; font-weight: 600; background: rgba(124, 92, 255, 0.12);">
-    Entrar como Invitado (Galería Pública) →
-  </a>
-</div>
-
-<script>
-  const tiempoInicio = Date.now();
-  const tabLogin = document.getElementById('tab-login');
-  const tabRegistro = document.getElementById('tab-registro');
-  const formLogin = document.getElementById('form-login');
-  const formRegistro = document.getElementById('form-registro');
-  const mensajeEstado = document.getElementById('mensaje-estado');
-
-  function mostrarMensaje(texto, esError = false) {
-    mensajeEstado.textContent = texto;
-    mensajeEstado.style.color = esError ? '#ff5555' : '#50fa7b';
-  }
-
-  tabLogin.addEventListener('click', () => {
-    tabLogin.classList.add('activo');
-    tabRegistro.classList.remove('activo');
-    formLogin.classList.add('activo');
-    formRegistro.classList.remove('activo');
-    mensajeEstado.textContent = '';
-  });
-
-  tabRegistro.addEventListener('click', () => {
-    tabRegistro.classList.add('activo');
-    tabLogin.classList.remove('activo');
-    formRegistro.classList.add('activo');
-    formLogin.classList.remove('activo');
-    mensajeEstado.textContent = '';
-  });
-
-  formLogin.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email')?.value || document.querySelector('#form-login input[type="email"]').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) return mostrarMensaje(data.error || 'Error al iniciar sesión.', true);
-
-      const rol = data.rol || data.usuario?.rol;
-      const autor = data.nombreArtistico || data.usuario?.nombreArtistico || '';
-
-      localStorage.setItem('mnemosine_token', data.token);
-      localStorage.setItem('mnemosine_rol', rol);
-      localStorage.setItem('mnemosine_autor', autor);
-
-      window.location.href = rol === 'admin' ? '/admin.html' : '/artista.html';
-    } catch (err) {
-      mostrarMensaje('Error de conexión con el servidor.', true);
+    function mostrarMensaje(texto, esError = false) {
+      mensajeEstado.textContent = texto;
+      mensajeEstado.style.color = esError ? '#ff8fa3' : '#72efdd';
     }
-  });
 
-  formRegistro.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      nombreArtistico: document.getElementById('reg-nombre').value.trim(),
-      email: document.getElementById('reg-email').value.trim(),
-      portafolioUrl: document.getElementById('reg-portafolio').value.trim(),
-      password: document.getElementById('reg-password').value,
-      sitio_secundario: document.getElementById('sitio_secundario').value,
-      timestampInicio: tiempoInicio
-    };
+    tabLogin.addEventListener('click', () => {
+      tabLogin.classList.add('activo');
+      tabRegistro.classList.remove('activo');
+      formLogin.classList.add('activo');
+      formRegistro.classList.remove('activo');
+      mensajeEstado.textContent = '';
+    });
 
-    try {
-      const res = await fetch('/api/auth/registro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok) return mostrarMensaje(data.error || 'Error al iniciar sesión.', true);
+    tabRegistro.addEventListener('click', () => {
+      tabRegistro.classList.add('activo');
+      tabLogin.classList.remove('activo');
+      formRegistro.classList.add('activo');
+      formLogin.classList.remove('activo');
+      mensajeEstado.textContent = '';
+    });
 
-      const rol = data.rol || data.usuario?.rol;
-      const autor = data.nombreArtistico || data.usuario?.nombreArtistico || '';
+    formLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
 
-      localStorage.setItem('mnemosine_token', data.token);
-      localStorage.setItem('mnemosine_rol', rol);
-      localStorage.setItem('mnemosine_autor', autor);
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) return mostrarMensaje(data.error || 'Error al iniciar sesión.', true);
 
-      window.location.href = rol === 'admin' ? '/admin.html' : '/artista.html';
-    } catch (err) {
-      mostrarMensaje('Error de conexión con el servidor.', true);
-    }
-  });
-</script>
-  </body>
+        const rol = data.rol || data.usuario?.rol;
+        const autor = data.nombreArtistico || data.usuario?.nombreArtistico || '';
+
+        localStorage.setItem('mnemosine_token', data.token);
+        localStorage.setItem('mnemosine_rol', rol);
+        localStorage.setItem('mnemosine_autor', autor);
+
+        window.location.href = rol === 'admin' ? '/admin.html' : '/artista.html';
+      } catch (err) {
+        mostrarMensaje('Error de conexión con el servidor.', true);
+      }
+    });
+
+    formRegistro.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        nombreArtistico: document.getElementById('reg-nombre').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        portafolioUrl: document.getElementById('reg-portafolio').value.trim(),
+        password: document.getElementById('reg-password').value,
+        sitio_secundario: document.getElementById('sitio_secundario').value,
+        timestampInicio: tiempoInicio
+      };
+
+      try {
+        const res = await fetch('/api/auth/registro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) return mostrarMensaje(data.error || 'Error al enviar solicitud.', true);
+
+        formRegistro.reset();
+        mostrarMensaje(data.mensaje || 'Solicitud enviada. Espera la aprobación de la administradora.', false);
+      } catch (err) {
+        mostrarMensaje('Error de conexión con el servidor.', true);
+      }
+    });
+  </script>
+</body>
 </html>
