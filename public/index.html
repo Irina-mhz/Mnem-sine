@@ -8,14 +8,17 @@
 </head>
 <body class="bg-gray-950 text-gray-200 font-sans min-h-screen flex flex-col">
     <nav class="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-teal-400 tracking-wide">MNEMÓSINE</h1>
                 <p class="text-xs text-gray-400">Portafolio Visual Protegido contra Scraping de IA</p>
             </div>
-            <a href="/acceso.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-3 py-2 rounded transition">
-                Acceso Creadores / WAF →
-            </a>
+            <div class="flex items-center gap-3">
+                <span id="badge-sesion" class="hidden text-xs text-teal-300 bg-teal-950/80 border border-teal-800 px-2.5 py-1 rounded-full"></span>
+                <a id="btn-nav-sesion" href="/acceso.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-3 py-2 rounded transition">
+                    Iniciar Sesión / Invitado →
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -38,6 +41,31 @@
     <a href="/api/honeypot/dataset-hd" style="display:none;" aria-hidden="true">Descargar Dataset Completo Sin Marca</a>
 
     <script>
+        const tokenActivo = localStorage.getItem('mnemosine_token');
+        const rolActivo = localStorage.getItem('mnemosine_rol');
+        const autorActivo = localStorage.getItem('mnemosine_autor');
+
+        const cabeceras = { 'Content-Type': 'application/json' };
+        if (tokenActivo) {
+            cabeceras['Authorization'] = `Bearer ${tokenActivo}`;
+        }
+
+        // Adaptar barra superior sin cerrar la sesión del usuario
+        const btnNav = document.getElementById('btn-nav-sesion');
+        const badgeSesion = document.getElementById('badge-sesion');
+
+        if (tokenActivo && rolActivo === 'admin') {
+            badgeSesion.textContent = 'Sesión: Admin';
+            badgeSesion.classList.remove('hidden');
+            btnNav.textContent = '← Volver a Centro de Comando';
+            btnNav.href = '/admin.html';
+        } else if (tokenActivo && rolActivo === 'artista') {
+            badgeSesion.textContent = `Sesión: ${autorActivo || 'Artista'}`;
+            badgeSesion.classList.remove('hidden');
+            btnNav.textContent = '← Volver a mi Estudio';
+            btnNav.href = '/artista.html';
+        }
+
         async function descargarObra(url, titulo) {
             try {
                 const respuesta = await fetch(url);
@@ -58,11 +86,11 @@
 
         async function cargarGaleria() {
             try {
-                const res = await fetch('/api/obras');
+                const res = await fetch('/api/obras', { headers: cabeceras });
                 const obras = await res.json();
                 const contenedor = document.getElementById('galeria-publica');
 
-                if (!obras.length) {
+                if (!Array.isArray(obras) || !obras.length) {
                     contenedor.innerHTML = '<p class="text-gray-400 text-sm">Aún no hay obras publicadas en la bóveda.</p>';
                     return;
                 }
@@ -98,22 +126,18 @@
                 console.error('Error cargando galería:', e);
             }
         }
+
         cargarGaleria();
-                    // Reportar visita de navegación real al motor de auditoría
-            fetch('/api/logs', {
+
+        // Reportar visita de navegación real al motor de auditoría
+        fetch('/api/logs', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: cabeceras,
             body: JSON.stringify({
                 pagina: window.location.pathname,
                 referrer: document.referrer || 'directo'
             })
-            }).catch(() => {});
-
-        const tokenActivo = localStorage.getItem('mnemosine_token');
-            const cabeceras = { 'Content-Type': 'application/json' };
-            if (tokenActivo) {
-            cabeceras['Authorization'] = `Bearer ${tokenActivo}`;
-        }
+        }).catch(() => {});
     </script>
 </body>
 </html>
