@@ -55,6 +55,7 @@
                 window.open(url, '_blank');
             }
         }
+
         async function cargarGaleria() {
             try {
                 const res = await fetch('/api/obras');
@@ -66,12 +67,9 @@
                     return;
                 }
 
-                <button type="button" class="btn-descargar" onclick="descargarObra('${obra.rutaArchivo}', '${obra.titulo}')">
-                Descargar PNG Protegido
-                </button>
-
                 contenedor.innerHTML = obras.map(obra => {
                     const tieneImagen = obra.rutaArchivo && (obra.rutaArchivo.startsWith('/protegidas/') || obra.rutaArchivo.startsWith('http'));
+                    const tituloSeguro = obra.titulo.replace(/'/g, "\\'");
                     return `
                     <article class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col">
                         ${tieneImagen 
@@ -89,7 +87,7 @@
                             <div class="pt-3 border-t border-gray-800 flex justify-between items-center gap-2">
                                 <span class="text-[11px] font-mono text-gray-500 truncate">${obra.marcaAgua?.hashRastreable || ''}</span>
                                 ${tieneImagen 
-                                    ? `<a href="${obra.rutaArchivo}" download class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded font-medium shrink-0 transition">Descargar PNG</a>`
+                                    ? `<button type="button" onclick="descargarObra('${obra.rutaArchivo}', '${tituloSeguro}')" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded font-medium shrink-0 transition cursor-pointer">Descargar PNG</button>`
                                     : ''
                                 }
                             </div>
