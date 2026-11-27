@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { redisConnection: redisClient } = require('../config/queues');
+const LogAuditoria = require('../models/LogAuditoria');
 
 const obtenerIpCliente = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
@@ -92,6 +93,16 @@ const activarHoneypot = async (req, res) => {
     const motivo = 'Trampa Honeypot activada (Bot rastreador)';
     await redisClient.set(`bloqueo:${ip}`, motivo, 'EX', 3600);
 
+    await LogAuditoria.create({
+      ip,
+      userAgent: req.headers['user-agent'] || 'Desconocido',
+      endpoint: req.originalUrl,
+      nivelAmenaza: 'ALTO',
+      dictamenAnomalia: true,
+      accionMitigadora: 'Trampa Honeypot + Bloqueo en Redis (HTTP 403)',
+      detallesVariables: { trampa: 'dataset-hd' }
+    });
+
     return res.status(403).json({
       error: 'Acceso denegado por Mnemósine WAF.',
       motivo,
@@ -102,5 +113,7 @@ const activarHoneypot = async (req, res) => {
     return res.status(403).json({ error: 'Acceso denegado.' });
   }
 };
+
+const LogAuditoria = require('../models/LogAuditoria');
 
 module.exports = { escudoMiddleware, activarHoneypot };

@@ -99,6 +99,15 @@
             }
         }
         cargarGaleria();
+                    // Reportar visita de navegación real al motor de auditoría
+            fetch('/api/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pagina: window.location.pathname,
+                referrer: document.referrer || 'directo'
+            })
+            }).catch(() => {});
     </script>
 </body>
 </html>
