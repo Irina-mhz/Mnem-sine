@@ -292,12 +292,12 @@
   formRegistro.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
-      nombre: document.getElementById('reg-nombre').value.trim(),
+      nombreArtistico: document.getElementById('reg-nombre').value.trim(),
       email: document.getElementById('reg-email').value.trim(),
-      portafolio: document.getElementById('reg-portafolio').value.trim(),
+      portafolioUrl: document.getElementById('reg-portafolio').value.trim(),
       password: document.getElementById('reg-password').value,
       sitio_secundario: document.getElementById('sitio_secundario').value,
-      tiempoCarga: tiempoInicio
+      timestampInicio: tiempoInicio
     };
 
     try {
